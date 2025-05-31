@@ -53,19 +53,6 @@ export default function Home({ navigation }: HomeProps) {
   const locationSubscriptionRef = useRef<any>(null);
   const locationIntervalRef = useRef<any>(null);
 
-  useEffect(() => {
-    const getToken = async () => {
-      let result = await AsyncStorage.getItem("userToken");
-      console.log("User Token:", result);
-      if (result) {
-        // navigation.navigate("Home");
-      } else {
-        // navigation.navigate('Register');
-      }
-    };
-    getToken();
-  }, []);
-
   const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com/api/v1";
 
   // Test network connectivity
@@ -145,9 +132,7 @@ export default function Home({ navigation }: HomeProps) {
           }),
         }
       );
-
       const data = await response.json();
-      console.log("Switch Status Response:", data);
 
       if (response.ok) {
         setIsActiveTrip((previousState) => !previousState);
@@ -404,6 +389,9 @@ export default function Home({ navigation }: HomeProps) {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
             accuracy: location.coords.accuracy,
+            altitude: location.coords.altitude,
+            heading: location.coords.heading,
+            speed: location.coords.speed,
             timestamp: location.timestamp,
           },
           route: `${startPoint} -> ${endPoint}`,

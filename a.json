@@ -2,10 +2,13 @@
   "driverId": "driver_002",
   "isActive": true,
   "location": {
-    "accuracy": 56.36629490155905,
-    "latitude": 6.664315721923688,
-    "longitude": -1.5584499640308884,
-    "timestamp": 1748692608335.5679
+    "accuracy": 5,
+    "altitude": 0,
+    "heading": 291.8,
+    "latitude": 37.41163599,
+    "longitude": -122.20224059,
+    "speed": 34.77,
+    "timestamp": 1748699413203.403
   },
   "route": " -> "
 }
