@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
   FlatList,
-  TouchableOpacity,
-  StyleSheet,
   Modal,
   Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 // Define the Location type
@@ -97,9 +96,7 @@ const locations: Location[] = [
 ];
 
 const EndingPoint: React.FC<EndingPointProps> = ({ onLocationSelect }) => {
-  const [searchText, setSearchText] = useState("");
-  const [filteredLocations, setFilteredLocations] =
-    useState<Location[]>(locations);
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [stops, setStops] = useState<string[]>([]);
 
@@ -121,36 +118,29 @@ const EndingPoint: React.FC<EndingPointProps> = ({ onLocationSelect }) => {
     fetchDrivers();
   }, []);
 
-  // Handle text input change
-  const handleInputChange = (text: string) => {
-    setSearchText(text);
-    onLocationSelect(text);
-    if (text) {
-      const filtered = locations.filter((location) =>
-        location.name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredLocations(filtered);
-    } else {
-      setFilteredLocations(locations);
-    }
-  };
-
   // Handle location selection
   const handleLocationSelect = (location: Location) => {
-    setSearchText(location.name);
+    setSelectedLocation(location.name);
     onLocationSelect(location.name);
     setIsDropdownVisible(false);
   };
 
+  const openDropdown = () => {
+    setIsDropdownVisible(true);
+  };
+
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Search for a location"
-        value={searchText}
-        onChangeText={handleInputChange}
-        onFocus={() => setIsDropdownVisible(true)}
-      />
+      <TouchableOpacity style={styles.input} onPress={openDropdown}>
+        <Text
+          style={[
+            styles.inputText,
+            !selectedLocation && styles.placeholderText,
+          ]}
+        >
+          {selectedLocation || "Select a location"}
+        </Text>
+      </TouchableOpacity>
 
       <Modal
         visible={isDropdownVisible}
@@ -164,7 +154,7 @@ const EndingPoint: React.FC<EndingPointProps> = ({ onLocationSelect }) => {
         >
           <View style={styles.modalContent}>
             <FlatList
-              data={filteredLocations}
+              data={locations}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -195,6 +185,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     width: "auto",
+    justifyContent: "center",
+    backgroundColor: "white",
+  },
+  inputText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  placeholderText: {
+    color: "#999",
   },
   modalOverlay: {
     flex: 1,

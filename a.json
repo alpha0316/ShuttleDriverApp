@@ -1,0 +1,11 @@
+{
+  "driverId": "driver_002",
+  "isActive": true,
+  "location": {
+    "accuracy": 56.36629490155905,
+    "latitude": 6.664315721923688,
+    "longitude": -1.5584499640308884,
+    "timestamp": 1748692608335.5679
+  },
+  "route": " -> "
+}
