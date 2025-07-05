@@ -49,10 +49,13 @@ export default function Home({ navigation }: HomeProps) {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [driverID, setDriverID] = useState<string>("");
-  const [busID, setBusID] = useState<string>("");
+  const [busID, setBusID] = useState<string>("bus_001");    
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [busRoute, setBusRoute] = useState([])
+  const [route1, setRoute1]= useState(false)
+  const [route2, setRoute2]= useState(false)
+  const [route3, setRoute3]= useState(false)
   const socketRef = useRef<any>(null);
   const locationSubscriptionRef = useRef<any>(null);
   const locationIntervalRef = useRef<any>(null);
@@ -105,7 +108,23 @@ export default function Home({ navigation }: HomeProps) {
         }
 
         const data = await response.json();
-        console.log("Drivers fetched successfully:", data);
+        // console.log("Drivers fetched successfully:", data.drivers[2].busRoute);
+       
+
+        const matchingDriver = data.drivers.find(driver => driver.driverID === busID)
+        //  console.log("Matching:", matchingDriver);
+         
+        if (matchingDriver.busRoute && matchingDriver.busRoute.length > 0) {
+
+          const stops = matchingDriver.busRoute[1].stops;
+          setBusRoute(stops);
+          // console.log("Bus routes set:", busRoute);
+        } else {
+          console.log("No bus routes found for driver");
+          setBusRoute([]);
+        }
+
+
       } catch (err: any) {
         if (err.name === "AbortError") {
           console.error("Request timed out after 10 seconds");
@@ -119,7 +138,8 @@ export default function Home({ navigation }: HomeProps) {
       }
     };
     fetchDrivers();
-  }, []);
+  }, [busID]);
+
 
 
   const switchStatus = async () => {
@@ -158,21 +178,41 @@ export default function Home({ navigation }: HomeProps) {
     switchStatus();
   };
 
-  const handleStartPointChange = (selectedLocation: string) => {
-    setStartPoint(selectedLocation);
-  };
+useEffect(() => {
+  // console.log("Current busRoute:", busRoute);
+  
+  setRoute1(false);
+  setRoute2(false);
+  setRoute3(false);
 
-  const handleEndPointChange = (selectedLocation: string) => {
-    setEndPoint(selectedLocation);
-  };
+  if (JSON.stringify(busRoute) === JSON.stringify(["Main Library", "Brunei", "Pentecost Busstop", "KSB", "SRC Busstop", "Main Library"])) {
+    setRoute1(true);
+    // console.log('Route1 matched - setting to true');
+  } else if (JSON.stringify(busRoute) === JSON.stringify(["Commercial Area", "Hall 7", "Pentecost Busstop", "KSB", "SRC Busstop", "Conti Busstop", "Commercial Area"])) {
+    setRoute2(true);
+    // console.log('Route2 matched - setting to true');
+  } else if (JSON.stringify(busRoute) === JSON.stringify(["Gaza", "Pharmacy Busstop", "Medical Village", "Gaza"])) {
+    setRoute3(true);
+    // console.log('Route3 matched - setting to true');
+  } else {
+    console.log('No route matched');
+  }
+}, [busRoute]);
+  // const handleStartPointChange = (selectedLocation: string) => {
+  //   setStartPoint(selectedLocation);
+  // };
 
-  const handleConfirmRoute = () => {
-    console.log("Start Point:", startPoint);
-    console.log("End Point:", endPoint);
-    if (location) {
-      console.log("Current Location:", location.coords);
-    }
-  };
+  // const handleEndPointChange = (selectedLocation: string) => {
+  //   setEndPoint(selectedLocation);
+  // };
+
+  // const handleConfirmRoute = () => {
+  //   console.log("Start Point:", startPoint);
+  //   console.log("End Point:", endPoint);
+  //   if (location) {
+  //     console.log("Current Location:", location.coords);
+  //   }
+  // };
 
   // Set up location tracking
   useEffect(() => {
@@ -655,8 +695,8 @@ export default function Home({ navigation }: HomeProps) {
                   padding : 16,
                   borderWidth : 1,
                   borderRadius : 16,
-                  borderColor : '#34A853',
-                  backgroundColor : '#fafafa'
+                  borderColor : route1 ? '#34A853' : 'rgba(0,0,0,0.1)',
+                  backgroundColor : route1 ? '#fafafa' : '#fff'
                 }}>
 
                   <View style={{
@@ -811,8 +851,8 @@ export default function Home({ navigation }: HomeProps) {
                   padding : 16,
                   borderWidth : 1,
                   borderRadius : 16,
-                  borderColor : 'rgba(0,0,0,0.1)',
-                  backgroundColor : '#fff'
+                       borderColor : route2 ? '#34A853' : 'rgba(0,0,0,0.1)',
+                  backgroundColor : route2 ? '#fafafa' : '#fff'
                 }}>
 
                   <View style={{
@@ -971,8 +1011,8 @@ export default function Home({ navigation }: HomeProps) {
                   padding : 16,
                   borderWidth : 1,
                   borderRadius : 16,
-                  borderColor : 'rgba(0,0,0,0.1)',
-                  backgroundColor : '#fff'
+                  borderColor : route3 ? '#34A853' : 'rgba(0,0,0,0.1)',
+                  backgroundColor : route3 ? '#fafafa' : '#fff'
                 }}>
 
                   <View style={{
