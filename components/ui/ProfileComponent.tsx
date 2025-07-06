@@ -14,14 +14,14 @@ const ProfileComponent = () => {
   fetchDiceBearNotionists();
   return (
     <View style={styles.profileContainer}>
-      <Image
+      {/* <Image
         source={{
           uri: "https://api.dicebear.com/7.x/notionists/svg?seed=123",
         }}
         style={styles.profileImage}
-      />
+      /> */}
       <View style={styles.profileTextContainer}>
-        <Text style={styles.profileText}>Oi Mandem</Text>
+        <Text style={styles.profileText}>Hello Mandem</Text>
         <Text style={styles.profileSubText}>Tap to view app settings</Text>
       </View>
     </View>

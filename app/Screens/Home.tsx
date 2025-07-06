@@ -56,6 +56,7 @@ export default function Home({ navigation }: HomeProps) {
   const [route1, setRoute1]= useState(false)
   const [route2, setRoute2]= useState(false)
   const [route3, setRoute3]= useState(false)
+  const [firstName, setFirstName] = useState('')
   const socketRef = useRef<any>(null);
   const locationSubscriptionRef = useRef<any>(null);
   const locationIntervalRef = useRef<any>(null);
@@ -108,17 +109,17 @@ export default function Home({ navigation }: HomeProps) {
         }
 
         const data = await response.json();
-        // console.log("Drivers fetched successfully:", data.drivers[2].busRoute);
+        // console.log("Drivers fetched successfully:", data.drivers[2].busRoute[0].stops);
        
 
-        const matchingDriver = data.drivers.find(driver => driver.driverID === busID)
-        //  console.log("Matching:", matchingDriver);
+        const matchingDriver = data.drivers.find((driver: any) => driver.driverID === busID)
+         console.log("Matching:", matchingDriver);
          
         if (matchingDriver.busRoute && matchingDriver.busRoute.length > 0) {
 
-          const stops = matchingDriver.busRoute[1].stops;
+          const stops = matchingDriver.busRoute[0].stops;
           setBusRoute(stops);
-          // console.log("Bus routes set:", busRoute);
+          console.log("Bus routes set:", busRoute);
         } else {
           console.log("No bus routes found for driver");
           setBusRoute([]);
@@ -179,13 +180,13 @@ export default function Home({ navigation }: HomeProps) {
   };
 
 useEffect(() => {
-  // console.log("Current busRoute:", busRoute);
+  console.log("Current busRoute:", busRoute);
   
   setRoute1(false);
   setRoute2(false);
   setRoute3(false);
 
-  if (JSON.stringify(busRoute) === JSON.stringify(["Main Library", "Brunei", "Pentecost Busstop", "KSB", "SRC Busstop", "Main Library"])) {
+  if (JSON.stringify(busRoute) === JSON.stringify(["Commercial Area", "Hall 7", "Pentecost Busstop", "KSB", "SRC Busstop", "Conti Busstop", "Commercial Area"])) {
     setRoute1(true);
     // console.log('Route1 matched - setting to true');
   } else if (JSON.stringify(busRoute) === JSON.stringify(["Commercial Area", "Hall 7", "Pentecost Busstop", "KSB", "SRC Busstop", "Conti Busstop", "Commercial Area"])) {
@@ -473,6 +474,7 @@ useEffect(() => {
             setBusID(userData.driver.id);
             setDriverID(userData.driver.fullName || userData.driver.id);
             console.log("Bus ID:", userData.driver.id);
+            setFirstName(userData.driver.fullName.split(' ')[0]);
           }
         } else {
           console.log("No user data found in AsyncStorage.");
@@ -518,7 +520,18 @@ useEffect(() => {
         <View style={styles.contentWrapper}>
           <View style={styles.mainContent}>
             <View style={styles.header}>
-              <ProfileComponent />
+                <View style={styles.profileContainer}>
+                    {/* <Image
+                      source={{
+                        uri: "https://api.dicebear.com/7.x/notionists/svg?seed=123",
+                      }}
+                      style={styles.profileImage}
+                    /> */}
+                    <View style={styles.profileTextContainer}>
+                      <Text style={styles.profileText}>Hello {firstName}</Text>
+                      <Text style={styles.profileSubText}>Tap to view app settings</Text>
+                    </View>
+                  </View>
               <TouchableOpacity
                 onPress={() =>
                   Alert.alert("Notifications", "No new notifications")
@@ -625,7 +638,7 @@ useEffect(() => {
               // borderColor : 'rgba(0,0,0,0.1)',
               backgroundColor : '#6996350D'
             }}>
-              <Svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="none">
+              <Svg width="24" height="24" viewBox="0 0 16 16" fill="none">
                 <Path d="M14.3736 7.16012L13.4669 6.10679C13.2936 5.90679 13.1536 5.53345 13.1536 5.26679V4.13345C13.1536 3.42679 12.5736 2.84679 11.8669 2.84679H10.7336C10.4736 2.84679 10.0936 2.70679 9.89358 2.53345L8.84025 1.62679C8.38025 1.23345 7.62691 1.23345 7.16025 1.62679L6.11358 2.54012C5.91358 2.70679 5.53358 2.84679 5.27358 2.84679H4.12025C3.41358 2.84679 2.83358 3.42679 2.83358 4.13345V5.27345C2.83358 5.53345 2.69358 5.90679 2.52691 6.10679L1.62691 7.16679C1.24025 7.62679 1.24025 8.37345 1.62691 8.83345L2.52691 9.89345C2.69358 10.0935 2.83358 10.4668 2.83358 10.7268V11.8668C2.83358 12.5735 3.41358 13.1535 4.12025 13.1535H5.27358C5.53358 13.1535 5.91358 13.2935 6.11358 13.4668L7.16691 14.3735C7.62691 14.7668 8.38025 14.7668 8.84691 14.3735L9.90025 13.4668C10.1002 13.2935 10.4736 13.1535 10.7402 13.1535H11.8736C12.5802 13.1535 13.1602 12.5735 13.1602 11.8668V10.7335C13.1602 10.4735 13.3002 10.0935 13.4736 9.89345L14.3802 8.84012C14.7669 8.38012 14.7669 7.62012 14.3736 7.16012ZM10.7736 6.74012L7.55358 9.96012C7.46025 10.0535 7.33358 10.1068 7.20025 10.1068C7.06691 10.1068 6.94025 10.0535 6.84691 9.96012L5.23358 8.34679C5.04025 8.15345 5.04025 7.83345 5.23358 7.64012C5.42691 7.44679 5.74691 7.44679 5.94025 7.64012L7.20025 8.90012L10.0669 6.03345C10.2602 5.84012 10.5802 5.84012 10.7736 6.03345C10.9669 6.22679 10.9669 6.54679 10.7736 6.74012Z" fill="#34A853"/>
               </Svg>
 
@@ -656,7 +669,7 @@ useEffect(() => {
               // borderColor : 'rgba(0,0,0,0.1)',
               backgroundColor : '#D2AA190D'
             }}>
-                <Svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="none">
+                <Svg width="24" height="24" viewBox="0 0 16 16" fill="none">
                   <Path d="M13.4605 9.37337L12.7071 8.12003C12.5405 7.8467 12.3938 7.32003 12.3938 7.00003V5.75337C12.3938 3.33337 10.4271 1.3667 8.01379 1.3667C5.59379 1.37337 3.62713 3.33337 3.62713 5.75337V6.99337C3.62713 7.31337 3.48046 7.84003 3.32046 8.11337L2.56713 9.3667C2.28046 9.85337 2.21379 10.4067 2.39379 10.8867C2.57379 11.3734 2.98046 11.76 3.51379 11.9334C4.23379 12.1734 4.96046 12.3467 5.70046 12.4734C5.77379 12.4867 5.84713 12.4934 5.92046 12.5067C6.01379 12.52 6.11379 12.5334 6.21379 12.5467C6.38713 12.5734 6.56046 12.5934 6.74046 12.6067C7.16046 12.6467 7.58713 12.6667 8.01379 12.6667C8.43379 12.6667 8.85379 12.6467 9.26713 12.6067C9.42046 12.5934 9.57379 12.58 9.72046 12.56C9.84046 12.5467 9.96046 12.5334 10.0805 12.5134C10.1538 12.5067 10.2271 12.4934 10.3005 12.48C11.0471 12.36 11.7871 12.1734 12.5071 11.9334C13.0205 11.76 13.4138 11.3734 13.6005 10.88C13.7871 10.38 13.7338 9.83337 13.4605 9.37337ZM8.50046 6.6667C8.50046 6.9467 8.27379 7.17337 7.99379 7.17337C7.71379 7.17337 7.48713 6.9467 7.48713 6.6667V4.60003C7.48713 4.32003 7.71379 4.09337 7.99379 4.09337C8.27379 4.09337 8.50046 4.32003 8.50046 4.60003V6.6667Z" fill="#D2AA19"/>
                   <Path d="M9.88678 13.3399C9.60678 14.1133 8.86678 14.6666 8.00012 14.6666C7.47345 14.6666 6.95345 14.4533 6.58678 14.0733C6.37345 13.8733 6.21345 13.6066 6.12012 13.3333C6.20678 13.3466 6.29345 13.3533 6.38678 13.3666C6.54012 13.3866 6.70012 13.4066 6.86012 13.4199C7.24012 13.4533 7.62678 13.4733 8.01345 13.4733C8.39345 13.4733 8.77345 13.4533 9.14678 13.4199C9.28678 13.4066 9.42678 13.3999 9.56012 13.3799C9.66678 13.3666 9.77345 13.3533 9.88678 13.3399Z" fill="#D2AA19"/>
                 </Svg>
@@ -894,7 +907,7 @@ useEffect(() => {
 
 
                         <Svg width="84" height="27" viewBox="0 0 84 27" fill="none">
-                          <Mask id="mask0_933_1781" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="84" height="27">
+                          <Mask id="mask0_933_1781"  maskUnits="userSpaceOnUse" x="0" y="0" width="84" height="27">
                             <Path d="M83.2118 0.595215H0.460938V26.5118H83.2118V0.595215Z" fill="white"/>
                           </Mask>
                           <G mask="url(#mask0_933_1781)">
@@ -1052,8 +1065,8 @@ useEffect(() => {
                         backgroundColor : '#34A853'
                       }}/>
 
-                        <Svg xmlns="http://www.w3.org/2000/svg" width="84" height="27" viewBox="0 0 84 27" fill="none">
-                          <Mask id="mask0_933_1781" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="84" height="27">
+                        <Svg width="84" height="27" viewBox="0 0 84 27" fill="none">
+                          <Mask id="mask0_933_1781"  maskUnits="userSpaceOnUse" x="0" y="0" width="84" height="27">
                             <Path d="M83.2118 0.595215H0.460938V26.5118H83.2118V0.595215Z" fill="white"/>
                           </Mask>
                           <G mask="url(#mask0_933_1781)">
@@ -1306,5 +1319,29 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 16,
+  },
+    profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  profileTextContainer: {
+    flexDirection: "column",
+    gap: 4,
+  },
+  profileText: {
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  profileSubText: {
+    fontSize: 12,
+    color: "#4F4F4F",
   },
 });
