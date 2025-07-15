@@ -113,8 +113,14 @@ export default function Home({ navigation }: HomeProps) {
        
 
         const matchingDriver = data.drivers.find((driver: any) => driver.driverID === busID)
-         console.log("Matching:", matchingDriver);
+        //  console.log("Matching:", matchingDriver);
          
+        if (!matchingDriver) {
+          console.warn("No matching driver found with ID:", busID);
+          setBusRoute([]); 
+          return; 
+        }
+
         if (matchingDriver.busRoute && matchingDriver.busRoute.length > 0) {
 
           const stops = matchingDriver.busRoute[0].stops;
@@ -1187,6 +1193,19 @@ useEffect(() => {
           >
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity> */}
+
+          <TouchableOpacity
+            onPress={handleSignOut}
+            style={{
+                 marginTop: "auto",
+                 marginBottom: 24,
+            }}
+          >
+            <Text style={{
+              color : 'red'
+            }}>Sign Out</Text>
+          </TouchableOpacity>
+
         </View>
       </View>
     </ScrollView>
