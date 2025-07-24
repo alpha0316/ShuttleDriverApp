@@ -109,7 +109,7 @@ export default function Home({ navigation }: HomeProps) {
         }
 
         const data = await response.json();
-        // console.log("Drivers fetched successfully:", data.drivers[2].busRoute[0].stops);
+        console.log("Drivers fetched successfully:", data.drivers[2].busRoute[0].stops);
        
 
         const matchingDriver = data.drivers.find((driver: any) => driver.driverID === busID)
@@ -125,9 +125,9 @@ export default function Home({ navigation }: HomeProps) {
 
           const stops = matchingDriver.busRoute[0].stops;
           setBusRoute(stops);
-          console.log("Bus routes set:", busRoute);
+          // console.log("Bus routes set:", busRoute);
         } else {
-          console.log("No bus routes found for driver");
+          // console.log("No bus routes found for driver");
           setBusRoute([]);
         }
 
@@ -192,12 +192,12 @@ useEffect(() => {
   setRoute2(false);
   setRoute3(false);
 
-  if (JSON.stringify(busRoute) === JSON.stringify(["Commercial Area", "Hall 7", "Pentecost Busstop", "KSB", "SRC Busstop", "Conti Busstop", "Commercial Area"])) {
+  if (JSON.stringify(busRoute) === JSON.stringify(["Main Library", "Brunei", "Pentecost Busstop", "KSB", "SRC Busstop", "Main Library"])) {
     setRoute1(true);
-    // console.log('Route1 matched - setting to true');
+    console.log('Route1 matched - setting to true');
   } else if (JSON.stringify(busRoute) === JSON.stringify(["Commercial Area", "Hall 7", "Pentecost Busstop", "KSB", "SRC Busstop", "Conti Busstop", "Commercial Area"])) {
     setRoute2(true);
-    // console.log('Route2 matched - setting to true');
+    console.log('Route2 matched - setting to true');
   } else if (JSON.stringify(busRoute) === JSON.stringify(["Gaza", "Pharmacy Busstop", "Medical Village", "Gaza"])) {
     setRoute3(true);
     // console.log('Route3 matched - setting to true');
@@ -479,7 +479,7 @@ useEffect(() => {
           if (userData.driver?.id) {
             setBusID(userData.driver.id);
             setDriverID(userData.driver.fullName || userData.driver.id);
-            console.log("Bus ID:", userData.driver.id);
+            // console.log("Bus ID:", userData.driver.id);
             setFirstName(userData.driver.fullName.split(' ')[0]);
           }
         } else {
