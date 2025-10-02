@@ -5,7 +5,7 @@ import BackButton from '@/components/BackButton';
 import axios from 'axios';
 
 import * as SecureStore from 'expo-secure-store';
-import SplashScreen from './SplashScreen';
+import SplashScreen from '../screens/SplashScreen';
 
 const OTPVerification = ({ navigation, route }) => {
   const [otp, setOtp] = useState("");

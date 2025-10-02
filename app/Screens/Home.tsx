@@ -63,6 +63,19 @@ export default function Home({ navigation }: HomeProps) {
 
   const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com/api/v1";
 
+
+
+// function shuffleID(busID) {
+//   const randomSuffix = Math.floor(Math.random() * 10000);
+//   return `session_${busID}_${randomSuffix}`;
+// }
+
+
+// const originalBusID = "bus_001";
+// const maskedID = shuffleID(originalBusID); 
+// console.log("Masked ID:", maskedID);
+
+
   // Test network connectivity
   const testConnectivity = async () => {
     try {
