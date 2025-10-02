@@ -1,10 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import SplashScreen from '../Screens/SplashScreen';
-import Register from '../Screens/Register';
-import Home from '../Screens/Home';
-import OTPVerification from '../Screens/OTPVerification';
-import SignIn from '../Screens/SignIn';
+import SplashScreen from '../screens/SplashScreen';
+import Register from '../screens/Register';
+import Home from '../screens/Home';
+import OTPVerification from '../screens/OTPVerification';
+import SignIn from '../screens/SignIn';
 
 const Stack = createNativeStackNavigator();
 
