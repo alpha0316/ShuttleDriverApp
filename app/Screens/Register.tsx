@@ -11,11 +11,25 @@ import PrimaryButton from "@/components/PrimaryButton";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Register = ({ navigation }) => {
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  Home: undefined;
+  SignIn: undefined;
+  // Add other routes here if needed
+};
+
+type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+interface RegisterProps {
+  navigation: RegisterScreenNavigationProp;
+}
+
+const Register = ({ navigation }: RegisterProps) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [focusedInput, setFocusedInput] = useState(null);
+  const [focusedInput, setFocusedInput] = useState<null | "fullName" | "phoneNumber" | "password">(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

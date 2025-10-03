@@ -11,13 +11,11 @@ import {
 import PrimaryButton from "@/components/PrimaryButton";
 import Icon from "react-native-vector-icons/FontAwesome";
 import BackButton from "@/components/BackButton";
-import axios from "axios";
 import OTPVerification from "./OTPVerification";
-import { request } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import * as SecureStore from 'expo-secure-store';
 
-const SignIn = ({ navigation, route }) => {
+const SignIn = ({ navigation }) => {
   const [verificationId, setVerificationId] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -51,15 +49,29 @@ const SignIn = ({ navigation, route }) => {
       // console.log(response)
 
       if (response.ok) {
-        await AsyncStorage.setItem("userData", JSON.stringify(data));
+        const userDataToSave = {
+          userId: data.user?._id,
+          phoneNumber: data.user?.phoneNumber,
+          fullName: data.user?.fullName,
+          token: data.token,
+        };
+
+        await AsyncStorage.setItem("driverData", JSON.stringify(userDataToSave));
+        console.log("✅ User data saved to AsyncStorage:", userDataToSave);
+
         setIsLoading(false);
         navigation.navigate("Home");
-      } else {
+      }
+      else {
         Alert.alert("Error", data.message || "Registration failed.");
         setIsLoading(false);
       }
     } catch (error) {
-      Alert.alert("Error", error.message || "Could not register.");
+      const errorMessage =
+        error && typeof error === "object" && "message" in error
+          ? (error as { message?: string }).message
+          : "Could not register.";
+      Alert.alert("Error", errorMessage);
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -78,6 +90,7 @@ const SignIn = ({ navigation, route }) => {
           gap: 12,
         }}
       >
+      <BackButton/>
         <View
           style={{
             gap: 4,

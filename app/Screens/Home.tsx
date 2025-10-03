@@ -526,7 +526,7 @@ useEffect(() => {
       await AsyncStorage.removeItem("userData");
       console.log("User data cleared from AsyncStorage");
 
-      navigation.navigate("Register");
+      navigation.navigate("SignUpType");
     } catch (error) {
       console.error("Error signing out:", error);
       Alert.alert("Error", "Failed to sign out. Please try again.");

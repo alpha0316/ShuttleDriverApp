@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput,FlatList, TouchableOpacity ,ScrollView, Picker  } from 'react-native';
+import { Image, StyleSheet, Platform, View, Text, TextInput,FlatList, TouchableOpacity ,ScrollView  } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -6,10 +6,17 @@ import PrimaryButton from '../../../components/PrimaryButton';
 // import HostelDropDown from '../../components/BackButton';
 // import LocationDropDown from '../../components/BackButton';
 import Table from '@/components/Table';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 
-export default function Home({ navigation }) {
+import type { StackNavigationProp } from '@react-navigation/stack';
+
+type HomeDeliveryProps = {
+  navigation: StackNavigationProp<any>;
+};
+
+export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
   const [selectCount, setSelectCount] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -18,10 +25,21 @@ export default function Home({ navigation }) {
   const BASE_CUSTOMER_URL = "https://backend-node-0kx8.onrender.com";
   const ORDER_STATUSES = ["pending", "picked", 'in progress',  "Filling", "filling completed", "completed"];
 
+
+   const handleLogout = async () => {
+     try {
+    await AsyncStorage.removeItem("riderData");
+    return true;
+    console.log("✅ Rider data cleared successfully");
+  } catch (error) {
+    console.error("❌ Failed to clear rider data:", error);
+    return false;
+  }
+  };
   
 
 
-  const handleSelectedCount = (selectCount, totalCount, price, filteredOrders) => {
+  const handleSelectedCount = (selectCount: React.SetStateAction<number>, totalCount: React.SetStateAction<number>, price: React.SetStateAction<number>, filteredOrders: React.SetStateAction<never[]>) => {
     setSelectCount(selectCount);
     setTotalBookings(totalCount);
     setTotalPrice(price);
@@ -83,19 +101,22 @@ export default function Home({ navigation }) {
                   Oi Mandem
                 </Text>
 
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: '#4F4F4F)',
-                  }}
+                <TouchableOpacity
+                    onPress={handleLogout}
+
                 >
-                  Tap to view app settings
-                </Text>
+                  <Text style={{
+                    fontSize: 12,
+                    color: 'red',
+                  }}> LogOut
+                  </Text>
+                 
+                </TouchableOpacity>
               </View>
             </View>
 
             <Svg
-              xmlns="http://www.w3.org/2000/svg"
+              // xmlns="http://www.w3.org/2000/svg"
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -140,7 +161,7 @@ export default function Home({ navigation }) {
           <View style={{
           flexDirection: 'row',
           alignItems :'center',
-          justifyContent : 'Space-Between',
+          justifyContent : 'space-between',
           zIndex : 1000,
         }}>
             {/* <HostelDropDown/>
@@ -155,7 +176,7 @@ export default function Home({ navigation }) {
             <Table 
                 onSelectCountChange={handleSelectedCount} 
                 // orders={orders.data}  // pass mock data
-                style={{ flex: 1 }}
+                // style={{ flex: 1 }}
               />
           </ScrollView>
          
@@ -168,7 +189,7 @@ export default function Home({ navigation }) {
           <Text style={{ fontWeight: '700', fontSize: 18 }}>Cost Summary</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Total Amount to be bought</Text>
-          <Text style={styles.price}>GHC 455.00</Text>
+          <Text>GHC 455.00</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Commission</Text>

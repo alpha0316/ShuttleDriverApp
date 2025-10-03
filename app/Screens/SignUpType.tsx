@@ -36,7 +36,7 @@ const Register = ({ navigation }) => {
       <View style={{ marginTop: 30, gap: 12 }}>
         <View style={{ gap: 100 }}>
           <Text style={{ fontSize: 20, fontWeight: "700" }}>
-            Gas<Text style={{
+            Shuttle<Text style={{
             color : 'rgba(0,0,0,0.5)'
             }}>App</Text> 
           </Text>
@@ -53,16 +53,15 @@ const Register = ({ navigation }) => {
                 <Text style={{ fontSize: 14, color : 'rgba(0,0,0,0.5)'}}>Select your transport category to sign up</Text>
             </View>
 
-            <TouchableOpacity 
-            // onPress={navigation.navigate('Register')}
-            
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('SignIn')}
             style={{
-              display : 'flex',
-              gap : 8,
-              padding : 16,
-              backgroundColor : '#fafafa',
-              borderRadius : 16,
-              borderWidth : 1,
+              display: 'flex',
+              gap: 8,
+              padding: 16,
+              backgroundColor: '#fafafa',
+              borderRadius: 16,
+              borderWidth: 1,
               borderColor: 'rgba(0,0,0,0.1)'
             }}>
 
@@ -157,7 +156,7 @@ const Register = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-            onPress={navigation.navigate('HomeDelivery')}
+            onPress={() => navigation.navigate('RegisterDelivery')}
             style={{
               display : 'flex',
               gap : 8,
