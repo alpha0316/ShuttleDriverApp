@@ -53,7 +53,7 @@ const Register = ({ navigation }) => {
 
       if (response.ok) {
         await AsyncStorage.setItem("userData", JSON.stringify(data));
-        navigation.navigate("Home");
+        navigation.navigate('DriverBottomNav');
         setIsLoading(false);
       } else {
         Alert.alert("Error", data.message || "Registration failed.");

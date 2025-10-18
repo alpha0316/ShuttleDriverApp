@@ -10,20 +10,20 @@ export default function SplashScreen() {
   useEffect(() => {
     const checkUserData = async () => {
       try {
-     
+
         const timer = setTimeout(async () => {
-          
+
           const userDataString = await AsyncStorage.getItem('userData');
           console.log('User Data (String):', userDataString);
 
           if (userDataString) {
-            
+
             const userData = JSON.parse(userDataString);
             console.log('User Data (Parsed):', userData);
 
-          
+
             if (userData) {
-              navigation.navigate('Home'); // Navigate to Home if user ID exists
+              navigation.navigate('DriverBottomNav'); // Navigate to Home if user ID exists
             } else {
               // navigation.navigate('Register'); // Navigate to Register if no user ID
             }
@@ -34,7 +34,7 @@ export default function SplashScreen() {
           setIsLoading(false); // Stop loading
         }, 2000);
 
-       
+
         return () => clearTimeout(timer);
       } catch (error) {
         console.error('Error checking user data:', error);

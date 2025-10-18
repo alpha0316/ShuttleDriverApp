@@ -656,7 +656,7 @@ useEffect(() => {
                     fontSize : 16,
                     fontWeight : '700',
                     color : '#34A853'
-                  }}>You are currently not an active ride</Text>
+                  }}>You are currently on an active ride</Text>
                         <Text style={{
                     fontSize : 14,
                     color : 'rgba(0,0,0,0.5)'

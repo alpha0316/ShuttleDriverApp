@@ -5,6 +5,7 @@ import Register from '../screens/Register';
 import Home from '../screens/Home';
 import OTPVerification from '../screens/OTPVerification';
 import SignIn from '../screens/SignIn';
+import DriverBottomNav from './DriverBottomNav'; // 👈 import here
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,8 @@ export default function MainNav() {
       <Stack.Screen name="SignIn" component={SignIn} options={{ headerShown: false }} />
       <Stack.Screen name="OTPVerification" component={OTPVerification} options={{ headerShown: false }} />
 
+      {/* 👇 Add your tab navigation here */}
+      <Stack.Screen name="DriverBottomNav" component={DriverBottomNav} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

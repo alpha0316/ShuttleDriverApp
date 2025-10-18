@@ -53,7 +53,7 @@ const SignIn = ({ navigation, route }) => {
       if (response.ok) {
         await AsyncStorage.setItem("userData", JSON.stringify(data));
         setIsLoading(false);
-        navigation.navigate("Home");
+        navigation.navigate('DriverBottomNav');
       } else {
         Alert.alert("Error", data.message || "Registration failed.");
         setIsLoading(false);

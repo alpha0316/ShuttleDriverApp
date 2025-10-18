@@ -1,19 +1,11 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native'; // Import NavigationContainer
+import { NavigationContainer } from '@react-navigation/native';
 import MainNav from './MainNav';
 
 export default function Index() {
   return (
- 
-      <MainNav/>
-   
+
+      <MainNav />
+  
   );
 }
-
-const styles = StyleSheet.create({
-  main: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-});
