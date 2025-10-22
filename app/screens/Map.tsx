@@ -121,6 +121,7 @@ export default function Home({ navigation }: HomeProps) {
         if (matchingDriver.busRoute && matchingDriver.busRoute.length > 0) {
           const stops = matchingDriver.busRoute[0].stops;
           setBusRoute(stops);
+          console.log("Bus routes set:", stops);
         } else {
           setBusRoute([]);
         }
