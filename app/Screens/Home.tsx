@@ -451,7 +451,7 @@ export default function Home({ navigation }: HomeProps) {
         };
 
         socketRef.current.emit("driver-location-update", locationData);
-        console.log("Location emitted:", locationData);
+        // console.log("Location emitted:", locationData);
       }
     };
 

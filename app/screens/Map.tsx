@@ -23,6 +23,7 @@ import Svg, {
   G,
   ClipPath
 } from "react-native-svg";
+import { locations } from './../data/locations';
 
 interface LocationData {
   coords: {
@@ -34,6 +35,22 @@ interface LocationData {
     speed: number;
   };
   timestamp: number;
+}
+
+interface Driver {
+  _id: string;
+  driverID: string;
+  fullName: string;
+  busID: string;
+  active: boolean;
+  phoneNumber: string;
+  busRoute: Array<{
+    stops: string[];
+  }>;
+  coords: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface HomeProps {
@@ -50,8 +67,9 @@ export default function Home({ navigation }: HomeProps) {
   const [busID, setBusID] = useState<string>("bus_001");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [busRoute, setBusRoute] = useState([])
-  const [firstName, setFirstName] = useState('')
+  const [busRoute, setBusRoute] = useState<string[]>([]);
+  const [firstName, setFirstName] = useState('');
+  const [allDrivers, setAllDrivers] = useState<any[]>([]); // Store all drivers data
 
   // NEW: State for active tab
   const [activeTab, setActiveTab] = useState<'general' | 'busStop'>('general');
@@ -61,6 +79,29 @@ export default function Home({ navigation }: HomeProps) {
   const locationIntervalRef = useRef<any>(null);
 
   const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com/api/v1";
+
+  // Filter locations based on bus route
+  const filteredLocations = busRoute.length > 0
+    ? locations.filter(loc => {
+      const normalizedLocName = loc.name.toLowerCase().trim();
+      return busRoute.some(routeName =>
+        routeName.toLowerCase().trim() === normalizedLocName
+      );
+    })
+    : [];
+
+  // Generate mock waiting counts for filtered locations
+
+
+  // Generate mock waiting counts for filtered locations
+  const getWaitingCount = (locationName: string) => {
+    const hash = locationName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return (hash % 15) + 5; // Random between 5-20
+  };
+
+  // Get active drivers
+  const activeDrivers = allDrivers.filter(driver => driver.active);
+  const inactiveDrivers = allDrivers.filter(driver => !driver.active);
 
   // Test network connectivity
   const testConnectivity = async () => {
@@ -108,9 +149,12 @@ export default function Home({ navigation }: HomeProps) {
         }
 
         const data = await response.json();
-        console.log("Drivers fetched successfully:", data.drivers[2].busRoute[0].stops);
+        console.log("Drivers fetched successfully", data);
 
-        const matchingDriver = data.drivers.find((driver: any) => driver.driverID === busID)
+        // ✅ ADD THIS LINE: Store all drivers data
+        setAllDrivers(data.drivers || []);
+
+        const matchingDriver = data.drivers.find((driver: any) => driver.driverID === busID);
 
         if (!matchingDriver) {
           console.warn("No matching driver found with ID:", busID);
@@ -122,6 +166,12 @@ export default function Home({ navigation }: HomeProps) {
           const stops = matchingDriver.busRoute[0].stops;
           setBusRoute(stops);
           console.log("Bus routes set:", stops);
+
+          // Log matched locations
+          const matched = locations.filter(loc =>
+            stops.some((stop: string) => stop.toLowerCase().trim() === loc.name.toLowerCase().trim())
+          );
+          console.log("Matched locations:", matched.map(loc => loc.name));
         } else {
           setBusRoute([]);
         }
@@ -359,7 +409,7 @@ export default function Home({ navigation }: HomeProps) {
         };
 
         socketRef.current.emit("driver-location-update", locationData);
-        console.log("Location emitted:", locationData);
+        // console.log("Location emitted:", locationData);
       }
     };
 
@@ -487,11 +537,13 @@ export default function Home({ navigation }: HomeProps) {
     );
   };
 
+
+
   return (
     <View style={styles.scrollContainer}>
       <View style={styles.main}>
         <View style={styles.contentWrapper}>
-          <OpenMap />
+          <OpenMap  />
 
           <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
             <View style={styles.bottomContainer}>
@@ -539,7 +591,7 @@ export default function Home({ navigation }: HomeProps) {
                   <Text style={{
                     color: activeTab === 'busStop' ? '#34A853' : 'rgba(0,0,0,0.6)',
                     fontWeight: activeTab === 'busStop' ? '600' : '400',
-                  }}>Bus Stop</Text>
+                  }}>Buses</Text>
                   <View style={{
                     width: '100%',
                     height: 2,
@@ -551,8 +603,10 @@ export default function Home({ navigation }: HomeProps) {
 
               {/* General Tab Content */}
               {activeTab === 'general' && (
-                <View style={{
-                  display: 'flex',
+
+                <ScrollView style={{
+                  maxHeight: 300,
+                  paddingHorizontal: 16,
                   gap: 8
                 }}>
                   <View style={{
@@ -565,98 +619,114 @@ export default function Home({ navigation }: HomeProps) {
                     <Text style={{
                       fontSize: 16,
                       fontWeight: 'bold',
-                    }}>Passengers</Text>
+                    }}>Passengers ({filteredLocations.length} stops)</Text>
 
-                    <View style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 12,
-                    }}>
-                      {/* Passenger Stop Items */}
-                      {['Brunei', 'Main Library', 'SRC Busstop', 'KSB'].map((stopName, index) => (
-                        <React.Fragment key={stopName}>
-                          <View style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                          }}>
-                            <View style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 12,
-                              flexDirection: 'row',
-                            }}>
-                              <View style={{
-                                width: 22,
-                                height: 22,
-                                borderRadius: 20,
-                                backgroundColor: index === 0 ? 'rgba(52, 168, 83, 0.30)' :
-                                  index === 1 ? '#FFFAEA' : 'rgba(234, 67, 53, 0.10)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}>
-                                <View style={{
-                                  width: 12,
-                                  height: 12,
-                                  borderRadius: 12,
-                                  backgroundColor: index === 0 ? '#34A853' :
-                                    index === 1 ? '#FFCE31' : '#EA4335',
-                                }} />
-                              </View>
-                              <Text style={{ fontSize: 14 }}>{stopName}</Text>
-                            </View>
-
+                    {filteredLocations.length > 0 ? (
+                      <View style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                      }}>
+                        {filteredLocations.map((loc, index) => (
+                          <React.Fragment key={loc.id}>
                             <View style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: 8,
                               flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              width: '100%',
                             }}>
                               <View style={{
                                 display: 'flex',
                                 alignItems: 'center',
+                                gap: 12,
                                 flexDirection: 'row',
                               }}>
-                                <Image
-                                  source={require('./../../assets/images/Avatar Image.png')}
-                                />
-                                <Image
-                                  source={require('./../../assets/images/user2.png')}
-                                  style={{ marginLeft: -8 }}
-                                />
-                                <Image
-                                  source={require('./../../assets/images/user3.png')}
-                                  style={{ marginLeft: -8 }}
-                                />
+                                <View style={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: 20,
+                                  backgroundColor: index === 0 ? 'rgba(52, 168, 83, 0.30)' :
+                                    index === filteredLocations.length - 1 ? 'rgba(234, 67, 53, 0.10)' : '#FFFAEA',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}>
+                                  <View style={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: 12,
+                                    backgroundColor: index === 0 ? '#34A853' :
+                                      index === filteredLocations.length - 1 ? '#EA4335' : '#FFCE31',
+                                  }} />
+                                </View>
+                                <Text style={{ fontSize: 14 }}>{loc.name}</Text>
                               </View>
-                              <Text style={{
-                                fontSize: 12,
-                                color: 'rgba(0,0,0,0.6)',
-                              }}>10+ waiting</Text>
-                            </View>
-                          </View>
 
-                          {index < 3 && (
-                            <View style={{
-                              width: 2,
-                              height: 18,
-                              borderWidth: 1,
-                              borderColor: 'rgba(0,0,0,0.1)',
-                              borderRadius: 12,
-                              backgroundColor: 'rgba(0,0,0,0.1)',
-                              marginLeft: 10,
-                            }} />
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </View>
+                              <View style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                flexDirection: 'row',
+                              }}>
+                                <View style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  flexDirection: 'row',
+                                }}>
+                                  <Image
+                                    source={require('./../../assets/images/Avatar Image.png')}
+                                  />
+                                  <Image
+                                    source={require('./../../assets/images/user2.png')}
+                                    style={{ marginLeft: -8 }}
+                                  />
+                                  <Image
+                                    source={require('./../../assets/images/user3.png')}
+                                    style={{ marginLeft: -8 }}
+                                  />
+                                </View>
+                                <Text style={{
+                                  fontSize: 12,
+                                  color: 'rgba(0,0,0,0.6)',
+                                }}>
+                                  {getWaitingCount(loc.name)}+ waiting
+                                </Text>
+                              </View>
+                            </View>
+
+                            {index < filteredLocations.length - 1 && (
+                              <View style={{
+                                width: 2,
+                                height: 18,
+                                borderWidth: 1,
+                                borderColor: 'rgba(0,0,0,0.1)',
+                                borderRadius: 12,
+                                backgroundColor: 'rgba(0,0,0,0.1)',
+                                marginLeft: 10,
+                              }} />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text style={{
+                        fontSize: 14,
+                        color: 'rgba(0,0,0,0.4)',
+                        textAlign: 'center',
+                        width: '100%',
+                        paddingVertical: 20,
+                      }}>
+                        No active route. Waiting for bus assignment...
+                      </Text>
+                    )}
                   </View>
-                </View>
+
+                </ScrollView>
+
               )}
+
 
               {/* Bus Stop Tab Content */}
               {activeTab === 'busStop' && (
@@ -669,307 +739,146 @@ export default function Home({ navigation }: HomeProps) {
                     gap: 16,
                     paddingVertical: 12,
                   }}>
-                    {/* Bus Stop Route Example 1 */}
+
+                    {/* Active Buses Section */}
                     <View style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      width: '100%',
+                      gap: 12,
                     }}>
-                      <View style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        gap: 8,
-                        alignItems: 'center',
+                      <Text style={{
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        marginBottom: 8,
                       }}>
-                        <View style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6
-                        }}>
-                          <Text>Main Library</Text>
-                          <View style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 8,
-                          }}>
-                            <Text style={{
-                              fontSize: 10,
-                              color: 'rgba(0,0,0,0.6)',
-                            }}>Start</Text>
-                            <Text style={{
-                              fontSize: 10,
-                              color: 'rgba(0,0,0,1)',
-                            }}>11:48 AM</Text>
-                          </View>
-                        </View>
+                        Active Buses ({activeDrivers.length})
+                      </Text>
 
-                        <View style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          flexDirection: 'row',
-                          justifyContent: 'space-between'
-                        }}>
-                          <View style={{
-                            width: 60,
-                            height: 2,
-                            borderRadius: 12,
-                            backgroundColor: '#34A853'
-                          }} />
+                      {activeDrivers.length > 0 ? (
+                        activeDrivers.map((driver, index) => {
+                          const routeStops = driver.busRoute && driver.busRoute.length > 0 ? driver.busRoute[0].stops : [];
+                          const hasMultipleStops = routeStops.length > 1;
+                          const nextDriver = activeDrivers[index + 1];
 
-                          <View style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            justifyContent: 'flex-start',
-                            marginBottom: 26
-                          }}>
-                            <Text style={{
-                              fontSize: 10,
-                              padding: 4,
-                              borderRadius: 12,
-                              backgroundColor: '#FEF3F2',
-                              color: '#B42318',
-                              borderWidth: 1,
-                              borderColor: '#FECDCA',
-                            }}>🚫 Full</Text>
-                            {BusIcon()}
-                          </View>
+                          // Generate mock times based on index
+                          const currentTime = new Date();
+                          const startTime = new Date(currentTime.getTime() + index * 10 * 60000);
+                          const arriveTime = new Date(startTime.getTime() + 9 * 60000);
+                          const isFull = index % 3 === 0;
 
-                          <View style={{
-                            width: 40,
-                            height: 4,
-                            borderRadius: 12,
-                            backgroundColor: 'rgba(0,0,0,0.1)',
-                          }} />
-
-                          <View style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 2
-                          }}>
-                            <Text>KSB</Text>
-                            <View style={{
+                          return (
+                            <View key={driver._id} style={{
                               display: 'flex',
-                              flexDirection: 'row',
                               alignItems: 'center',
                               gap: 8,
+                              width: '100%',
                             }}>
-                              <Text style={{
-                                fontSize: 10,
-                                color: 'rgba(0,0,0,0.6)',
-                              }}>Arriving</Text>
-                              <Text style={{
-                                fontSize: 10,
-                                color: 'rgba(0,0,0,1)',
-                              }}>11:57 AM</Text>
+                              <View style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                                gap: 8,
+                                alignItems: 'center',
+                              }}>
+                                <View style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 6
+                                }}>
+                                  <Text style={{ fontSize: 14, fontWeight: '600' }}>Main Library</Text>
+                                  <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.6)' }}>Start</Text>
+
+
+                                  <View style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                  }}>
+
+
+                                  </View>
+                                </View>
+
+                                <View style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 2,
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between'
+                                }}>
+                                  <View style={{
+                                    width: 70,
+                                    height: 2,
+                                    borderRadius: 12,
+                                    backgroundColor: '#34A853'
+                                  }} />
+
+                                  <View style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    justifyContent: 'flex-start',
+                                    marginBottom: 26
+                                  }}>
+                                    <Text style={{
+                                      fontSize: 10,
+                                      padding: 4,
+                                      borderRadius: 12,
+                                      backgroundColor: isFull ? '#FEF3F2' : '#FEF3F2',
+                                      color: isFull ? '#B42318' : '#B42318',
+                                      borderWidth: 1,
+                                      borderColor: isFull ? '#FECDCA' : '#FECDCA',
+                                    }}>
+                                      {isFull ? '🚫 Full' : '🟠 Moderate'}
+                                    </Text>
+                                    {BusIcon()}
+                                  </View>
+
+                                  <View style={{
+                                    width: 90,
+                                    height: 4,
+                                    borderRadius: 12,
+                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                  }} />
+
+                                  <View style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2
+                                  }}>
+                                    <Text style={{ fontSize: 14, fontWeight: '600' }}>Brueni</Text>
+                                    <View style={{
+                                      display: 'flex',
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      gap: 8,
+                                    }}>
+                                      <Text style={{
+                                        fontSize: 10,
+                                        color: 'rgba(0,0,0,0.6)',
+                                      }}>Arriving</Text>
+
+                                    </View>
+                                  </View>
+                                </View>
+                              </View>
                             </View>
-                          </View>
-                        </View>
-                      </View>
+                          );
+                        })
+                      ) : (
+                        <Text style={{
+                          fontSize: 14,
+                          color: 'rgba(0,0,0,0.4)',
+                          textAlign: 'center',
+                          paddingVertical: 20,
+                        }}>
+                          No active buses found
+                        </Text>
+                      )}
                     </View>
 
-                    {/* Bus Stop Route Example 2 */}
-                    <View style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      gap: 4,
-                      alignItems: 'center',
-                    }}>
-                      <View style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6
-                      }}>
-                        <Text>Casley Hayford</Text>
-                        <View style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 8,
-                        }}>
-                          <Text style={{
-                            fontSize: 10,
-                            color: 'rgba(0,0,0,0.6)',
-                          }}>Start</Text>
-                          <Text style={{
-                            fontSize: 10,
-                            color: 'rgba(0,0,0,1)',
-                          }}>11:48 AM</Text>
-                        </View>
-                      </View>
 
-                      <View style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between'
-                      }}>
-                        <View style={{
-                          width: 30,
-                          height: 2,
-                          borderRadius: 12,
-                          backgroundColor: '#34A853'
-                        }} />
-
-                        <View style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          justifyContent: 'flex-start',
-                          marginBottom: 26
-                        }}>
-                          <Text style={{
-                            fontSize: 10,
-                            padding: 4,
-                            borderRadius: 12,
-                            backgroundColor: '#FEF3F2',
-                            color: '#B42318',
-                            borderWidth: 1,
-                            borderColor: '#FECDCA',
-                          }}>🟠 Moderate</Text>
-                          {BusIcon()}
-                        </View>
-
-
-
-                        <View style={{
-                          width: 40,
-                          height: 4,
-                          borderRadius: 12,
-                          backgroundColor: 'rgba(0,0,0,0.1)',
-                        }} />
-
-                        <View style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2
-                        }}>
-                          <Text>Brunei</Text>
-                          <View style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 8,
-                          }}>
-                            <Text style={{
-                              fontSize: 10,
-                              color: 'rgba(0,0,0,0.6)',
-                            }}>Arriving</Text>
-                            <Text style={{
-                              fontSize: 10,
-                              color: 'rgba(0,0,0,1)',
-                            }}>11:57 AM</Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Bus Stop Route Example 3 */}
-                    <View style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      gap: 4,
-                      alignItems: 'center',
-                    }}>
-                      <View style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6
-                      }}>
-                        <Text>Casley Hayford</Text>
-                        <View style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 8,
-                        }}>
-                          <Text style={{
-                            fontSize: 10,
-                            color: 'rgba(0,0,0,0.6)',
-                          }}>Start</Text>
-                          <Text style={{
-                            fontSize: 10,
-                            color: 'rgba(0,0,0,1)',
-                          }}>11:48 AM</Text>
-                        </View>
-                      </View>
-
-                      <View style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between'
-                      }}>
-                        <View style={{
-                          width: 30,
-                          height: 2,
-                          borderRadius: 12,
-                          backgroundColor: '#34A853'
-                        }} />
-
-                        <View style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          justifyContent: 'flex-start',
-                          marginBottom: 26
-                        }}>
-                          <Text style={{
-                            fontSize: 10,
-                            padding: 4,
-                            borderRadius: 12,
-                            backgroundColor: '#FEF3F2',
-                            color: '#B42318',
-                            borderWidth: 1,
-                            borderColor: '#FECDCA',
-                          }}>🟠 Moderate</Text>
-                          {BusIcon()}
-                        </View>
-
-
-
-                        <View style={{
-                          width: 40,
-                          height: 4,
-                          borderRadius: 12,
-                          backgroundColor: 'rgba(0,0,0,0.1)',
-                        }} />
-
-                        <View style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2
-                        }}>
-                          <Text>Brunei</Text>
-                          <View style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 8,
-                          }}>
-                            <Text style={{
-                              fontSize: 10,
-                              color: 'rgba(0,0,0,0.6)',
-                            }}>Arriving</Text>
-                            <Text style={{
-                              fontSize: 10,
-                              color: 'rgba(0,0,0,1)',
-                            }}>11:57 AM</Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
                   </View>
                 </ScrollView>
               )}
