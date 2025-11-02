@@ -1,131 +1,142 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput,FlatList, TouchableOpacity ,ScrollView, Picker  } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import PrimaryButton from '../../../components/PrimaryButton';
-// import HostelDropDown from '../../components/BackButton';
-// import LocationDropDown from '../../components/BackButton';
+// In your PickUps.tsx or wherever you're using the Table
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Table from '@/components/Table';
-import OpenMap from '@/components/OpenMap'
+import OpenMap from '@/components/OpenMap'; // Your map component
+import PrimaryButton from '@/components/PrimaryButton';
 import BackButton from '@/components/BackButton';
 
-
-
 export default function PickUps({ navigation }) {
-  const [selectCount, setSelectCount] = useState(0);
-  const [totalBookings, setTotalBookings] = useState(0);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [filteredOrders, setFilterOrders] = useState([])
-  const [orders, setOrders] = useState({ data: [] });
+  const [selectedHostel, setSelectedHostel] = useState(null);
 
-
-  
-
-
-  const handleSelectedCount = (selectCount, totalCount, price, filteredOrders) => {
-    setSelectCount(selectCount);
-    setTotalBookings(totalCount);
-    setTotalPrice(price);
-    setFilterOrders(filteredOrders)
-  };
-
-     const updateOrderStatus = useCallback(async (orderId, newStatus) => {
-        if (!ORDER_STATUSES.includes(newStatus)) {
-          console.error("Invalid status value:", newStatus);
-          return;
-        }
-      
-        try {
-          const response = await fetch(`${BASE_CUSTOMER_URL}/api/orders/order/${orderId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ newOrderStatus: newStatus }),
-          });
-      
-          if (!response.ok) {
-            const errorData = await response.json(); // Read the response body once
-            throw new Error(errorData.message || "Failed to update order status");
-          }
-      
-          const data = await response.json(); // Read the response body once
-          console.log('status', data);
-      
-          setOrders(prevOrders => ({
-            data: prevOrders.data.map(order =>
-              order._id === orderId ? { ...order, orderStatus: newStatus } : order
-            )
-          }));
-      
-        } catch (err) {
-          console.error("Error updating order status:", err.message);
-        }
-      }, []);
-
-
-  const startFilling = () => {
-  
-
-
-      navigation.navigate('FillingProcess')
-  }
- 
-  const isButtonDisabled = totalBookings > selectCount;
+  // Your order data
+  const tableData = [
+    {
+      id: '011',
+      customerName: 'Nana Ama Amankwah',
+      phone: '055 414 4611',
+      hostel: 'Brunei',
+      size: 'Medium',
+      price: 'GHS 65.00',
+      status: 'pending'
+    },
+    {
+      id: '012',
+      customerName: 'Kwame Mensah',
+      phone: '020 123 4567',
+      hostel: 'Suncity Hostel',
+      size: 'Large',
+      price: 'GHS 85.00',
+      status: 'completed'
+    },
+    {
+      id: '013',
+      customerName: 'Ama Serwaa',
+      phone: '054 987 6543',
+      hostel: 'Independence Hall',
+      size: 'Small',
+      price: 'GHS 45.00',
+      status: 'pending'
+    },
+    {
+      id: '014',
+      customerName: 'Kofi Owusu',
+      phone: '027 555 1234',
+      hostel: 'Hall 2',
+      size: 'Medium',
+      price: 'GHS 65.00',
+      status: 'in-progress'
+    },
+    {
+      id: '015',
+      customerName: 'Abena Pokuaa',
+      phone: '024 777 8888',
+      hostel: 'Hall 8',
+      size: 'Large',
+      price: 'GHS 85.00',
+      status: 'pending'
+    },
+    {
+      id: '016',
+      customerName: 'Yaw Boateng',
+      phone: '050 222 3333',
+      hostel: 'Hall 4',
+      size: 'Small',
+      price: 'GHS 45.00',
+      status: 'completed'
+    },
+    {
+      id: '017',
+      customerName: 'Akua Nyarko',
+      phone: '055 666 9999',
+      hostel: 'Hall 6',
+      size: 'Medium',
+      price: 'GHS 65.00',
+      status: 'pending'
+    },
+    {
+      id: '018',
+      customerName: 'Kwabena Osei',
+      phone: '020 444 5555',
+      hostel: 'Hall 1',
+      size: 'Large',
+      price: 'GHS 85.00',
+      status: 'in-progress'
+    },
+    {
+      id: '019',
+      customerName: 'Adwoa Safo',
+      phone: '054 111 2222',
+      hostel: 'Hall 9',
+      size: 'Small',
+      price: 'GHS 45.00',
+      status: 'completed'
+    },
+    {
+      id: '020',
+      customerName: 'Benedicta Appiah',
+      phone: '027 888 9999',
+      hostel: 'Hall 7',
+      size: 'Medium',
+      price: 'GHS 65.00',
+      status: 'pending'
+    }
+  ];
 
   return (
     <View style={styles.main}>
       <View style={styles.contentWrapper}>
-        {/* Main content */}
-        <View style ={{
 
-          gap : 16,
-          // backgroundColor: 'red',
-        }}>
-        
-        <OpenMap/>
-  
+        {/* Map Section */}
+        <View style={{ gap: 16 }}>
+          <OpenMap
+            orders={tableData}
+            selectedHostel={selectedHostel}
+            campusName="KNUST"  // 👈 Change this to your university
+            city="Kumasi"       // 👈 Change this to your city
+          />
         </View>
 
-    
+        {/* Bottom Sheet with Orders */}
         <View style={styles.footer}>
-
-          <View style={{
-            display : 'flex',
-            // flex : 1,
-            alignItems : 'center',
-            justifyContent : 'space-between',
-            flexDirection : 'row'
-          }}>
-            {/* <Svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <Path d="M10.0002 13.2802L5.65355 8.93355C5.14022 8.42021 5.14022 7.58021 5.65355 7.06688L10.0002 2.72021" stroke="black" stroke-opacity="0.6" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-            </Svg> */}
-
-            <BackButton/>
-
-            <Text>0 <Text style={{
-              color : 'rgba(0,0,0,0.5)'
-            }}>/ 4 Cylinders Picked</Text></Text>
+          <View style={styles.headerRow}>
+            <BackButton />
+            <Text>0 / 10 Orders</Text>
           </View>
 
-          <Text style={{
-            fontSize : 14,
-            fontWeight : '700'
-          }}>Orders</Text>
+          <Text style={styles.ordersTitle}>Orders</Text>
 
-          <ScrollView style={{
-            height : '30%',
-          }}>
-            <Table 
-                onSelectCountChange={handleSelectedCount} 
-                // orders={orders.data}  // pass mock data
-              />
+          <ScrollView style={styles.scrollContainer}>
+            <Table
+              tableData={tableData}
+              onStudentPress={(student) => setSelectedHostel(student.hostel)}
+            />
           </ScrollView>
 
-  
-       
           <PrimaryButton
-            title={'Start Filling'}
-            onPress={startFilling}
-            disabled={isButtonDisabled}
+            title="Start Delivery"
+            onPress={() => navigation.navigate('FillingProcess')}
           />
         </View>
       </View>
@@ -133,28 +144,35 @@ export default function PickUps({ navigation }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   main: {
-    flex: 1, // Ensures the container fills the screen
+    flex: 1,
     backgroundColor: 'white',
   },
   contentWrapper: {
-    flex: 1, // Allows the main content to take up available space
-    justifyContent: 'space-between', // Spreads content and footer
-
+    flex: 1,
+    justifyContent: 'space-between',
   },
-
   footer: {
     padding: 16,
     borderRadius: 32,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.10)',
     backgroundColor: '#F5F5F5',
-    alignSelf: 'stretch',
     gap: 8,
-    position: 'relative',
-    bottom : '1%',
-    marginHorizontal : 12
+    marginHorizontal: 12,
+    marginBottom: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  ordersTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  scrollContainer: {
+    height: 250, // Adjust based on your needs
   },
 });

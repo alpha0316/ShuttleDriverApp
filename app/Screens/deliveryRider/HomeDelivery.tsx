@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, View, Text, TextInput,FlatList, TouchableOpacity ,ScrollView  } from 'react-native';
+import { Image, StyleSheet, Platform, View, Text, TextInput, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -23,21 +23,19 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
   const [filteredOrders, setFilterOrders] = useState([])
   const [orders, setOrders] = useState({ data: [] });
   const BASE_CUSTOMER_URL = "https://backend-node-0kx8.onrender.com";
-  const ORDER_STATUSES = ["pending", "picked", 'in progress',  "Filling", "filling completed", "completed"];
+  const ORDER_STATUSES = ["pending", "picked", 'in progress', "Filling", "filling completed", "completed"];
 
 
-   const handleLogout = async () => {
-     try {
-    await AsyncStorage.removeItem("riderData");
-    return true;
-    console.log("✅ Rider data cleared successfully");
-  } catch (error) {
-    console.error("❌ Failed to clear rider data:", error);
-    return false;
-  }
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("riderData");
+      return true;
+      console.log("✅ Rider data cleared successfully");
+    } catch (error) {
+      console.error("❌ Failed to clear rider data:", error);
+      return false;
+    }
   };
-  
-
 
   const handleSelectedCount = (selectCount: React.SetStateAction<number>, totalCount: React.SetStateAction<number>, price: React.SetStateAction<number>, filteredOrders: React.SetStateAction<never[]>) => {
     setSelectCount(selectCount);
@@ -46,21 +44,18 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
     setFilterOrders(filteredOrders)
   };
 
-
-
-
   const startFilling = () => {
-      navigation.navigate('PickUps')
+    navigation.navigate('PickUps')
   }
- 
+
   const isButtonDisabled = totalBookings > selectCount;
 
   return (
     <View style={styles.main}>
       <View style={styles.contentWrapper}>
         {/* Main content */}
-        <View style ={{
-          gap : 16,
+        <View style={{
+          gap: 16,
         }}>
           {/* Header */}
           <View
@@ -68,7 +63,7 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-          
+
             }}
           >
             <View
@@ -102,7 +97,7 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
                 </Text>
 
                 <TouchableOpacity
-                    onPress={handleLogout}
+                  onPress={handleLogout}
 
                 >
                   <Text style={{
@@ -110,7 +105,7 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
                     color: 'red',
                   }}> LogOut
                   </Text>
-                 
+
                 </TouchableOpacity>
               </View>
             </View>
@@ -147,56 +142,56 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
           </View>
 
           <View style={{
-              flexDirection : 'row',
-              justifyContent : 'space-between',
-              alignItems : 'center',
-              gap : 12,
-        
-      }}>
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+
+          }}>
             <Text style={{
-                fontSize : 18,
-                fontWeight : '700'
+              fontSize: 18,
+              fontWeight: '700'
             }}>Today's Bookings</Text>
 
-          <View style={{
-          flexDirection: 'row',
-          alignItems :'center',
-          justifyContent : 'space-between',
-          zIndex : 1000,
-        }}>
-            {/* <HostelDropDown/>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              zIndex: 1000,
+            }}>
+              {/* <HostelDropDown/>
             <LocationDropDown/> */}
-            <Text> {selectCount} / {totalBookings} { selectCount > 1 ?  'Cylinder' : 'Cylinders' } </Text>
-        </View> 
-      </View>
+              <Text> {selectCount} / {totalBookings} {selectCount > 1 ? 'Cylinder' : 'Cylinders'} </Text>
+            </View>
+          </View>
 
           <ScrollView style={{
-            maxHeight : '71%',
+            maxHeight: '71%',
           }}>
-            <Table 
-                onSelectCountChange={handleSelectedCount} 
-                // orders={orders.data}  // pass mock data
-                // style={{ flex: 1 }}
-              />
+            <Table
+              onSelectCountChange={handleSelectedCount}
+            // orders={orders.data}  // pass mock data
+            // style={{ flex: 1 }}
+            />
           </ScrollView>
-         
-         
+
+
 
         </View>
 
-    
+
         <View style={styles.footer}>
           <Text style={{ fontWeight: '700', fontSize: 18 }}>Cost Summary</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Total Amount to be bought</Text>
-          <Text>GHC 455.00</Text>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Commission</Text>
-          <Text>GHC 136.00</Text>
-        </View>
+            <Text style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Total Amount to be bought</Text>
+            <Text>GHC 455.00</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Commission</Text>
+            <Text>GHC 136.00</Text>
+          </View>
           <PrimaryButton
-            title={'Start Pickup'}
+            title={'Start Delivery'}
             onPress={startFilling}
             disabled={isButtonDisabled}
           />
@@ -246,6 +241,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     gap: 16,
     position: 'relative',
-    bottom : '7%',
+    bottom: '7%',
   },
 });
