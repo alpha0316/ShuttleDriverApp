@@ -3,39 +3,65 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import Icon from "react-native-vector-icons/FontAwesome";
-import BackButton from "@/components/BackButton";
-import axios from "axios";
-import OTPVerification from "./OTPVerification";
-import { request } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import * as SecureStore from 'expo-secure-store';
 
-const SignIn = ({ navigation, route }) => {
-  const [verificationId, setVerificationId] = useState(null);
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+type SignInScreenNavigationProp = NativeStackNavigationProp<any>;
+
+const SignIn = ({ navigation }: { navigation: SignInScreenNavigationProp }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ phoneNumber?: string; password?: string }>({});
 
-  const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com/api/v1";
+  const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com";
 
-  const SignIn = async () => {
-    setIsLoading(true);
-    if (!phoneNumber || phoneNumber.length < 10) {
-      alert("Please enter a valid phone number.");
+  // Validation function
+  const validateInputs = () => {
+    const newErrors: { phoneNumber?: string; password?: string } = {};
+
+    // Phone number validation
+    if (!phoneNumber) {
+      newErrors.phoneNumber = "Phone number is required";
+    } else if (phoneNumber.length !== 10) {
+      newErrors.phoneNumber = "Phone number must be exactly 10 digits";
+    } else if (!/^\d+$/.test(phoneNumber)) {
+      newErrors.phoneNumber = "Phone number must contain only digits";
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignIn = async () => {
+    // Validate inputs first
+    if (!validateInputs()) {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const response = await fetch(`${BASE_CUSTOMER_URL}/auth/login`, {
+      const response = await fetch(`${BASE_CUSTOMER_URL}/api/auth/driver/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,208 +73,292 @@ const SignIn = ({ navigation, route }) => {
       });
 
       const data = await response.json();
-      console.log(data);
-      // console.log(response)
+      console.log("Login response:", data);
 
       if (response.ok) {
+        // Store user data and token
         await AsyncStorage.setItem("userData", JSON.stringify(data));
-        setIsLoading(false);
-        navigation.navigate('DriverBottomNav');
+        
+        // Store token separately for easy access
+        if (data.token) {
+          await AsyncStorage.setItem("authToken", data.token);
+        }
+
+        Alert.alert("Success", "Login successful!", [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("DriverBottomNav"),
+          },
+        ]);
       } else {
-        Alert.alert("Error", data.message || "Registration failed.");
-        setIsLoading(false);
+        Alert.alert(
+          "Login Failed",
+          data.message || "Invalid credentials. Please try again."
+        );
       }
     } catch (error) {
-      Alert.alert("Error", error.message || "Could not register.");
-      setIsLoading(false);
+      console.error("Login error:", error);
+      Alert.alert(
+        "Error",
+        "Unable to connect to the server. Please check your internet connection and try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Handle phone number input (only allow digits)
+  const handlePhoneNumberChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, "");
+    setPhoneNumber(cleaned);
+    // Clear error when user starts typing
+    if (errors.phoneNumber) {
+      setErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+    }
+  };
+
+  // Handle password input
+  const handlePasswordChange = (text: React.SetStateAction<string>) => {
+    setPassword(text);
+    // Clear error when user starts typing
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: undefined }));
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {/* <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-      </View> */}
-
-      <View
-        style={{
-          marginTop: 30,
-          gap: 12,
-        }}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        <View
-          style={{
-            gap: 4,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-            }}
-          >
-            Welcome Back To The Shuttle Driver App
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 16,
-              color: "rgba(0,0,0,0.6)",
-            }}
-          >
-            Enter Your Details To Login{" "}
-          </Text>
-        </View>
-
-        <View
-          style={{
-            display: "flex",
-            gap: 16,
-          }}
-        >
-          <View
-            style={{
-              display: "flex",
-              gap: 8,
-            }}
-          >
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: phoneNumber ? "#000" : "rgba(0, 0, 0, 0.20)",
-                  backgroundColor: phoneNumber ? "#fff" : "#F4F4F4",
-                },
-              ]}
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="numeric"
-              autoCapitalize="none"
-              placeholder="Enter your phone number"
-              placeholderTextColor={"rgba(0,0,0,.5)"}
-              returnKeyType="done"
-              maxLength={10}
-            />
+        <View style={styles.content}>
+          {/* Header Section */}
+          <View style={styles.headerSection}>
+            <Text style={styles.title}>Welcome Back To The Shuttle Driver App</Text>
+            <Text style={styles.subtitle}>Enter Your Details To Login</Text>
           </View>
 
-          <View
-            style={{
-              display: "flex",
-              gap: 8,
-            }}
-          >
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: password ? "#000" : "rgba(0, 0, 0, 0.20)",
-                  backgroundColor: password ? "#fff" : "#F4F4F4",
-                },
-              ]}
-              value={password}
-              onChangeText={setPassword}
-              // keyboardType='numeric'
-              autoCapitalize="none"
-              placeholder="Enter password"
-              placeholderTextColor={"rgba(0,0,0,.5)"}
-              returnKeyType="done"
-              maxLength={10}
-              // secureTextEntry={true}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute",
-                right: 16,
-                paddingVertical: 40,
-              }}
-            >
-              <Icon
-                name={showPassword ? "eye-slash" : "eye"}
-                size={20}
-                color="rgba(0,0,0,0.5)"
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            {/* Phone Number Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  phoneNumber && styles.inputFilled,
+                  errors.phoneNumber && styles.inputError,
+                ]}
+                value={phoneNumber}
+                onChangeText={handlePhoneNumberChange}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                placeholder="Enter your phone number"
+                placeholderTextColor="rgba(0,0,0,0.5)"
+                returnKeyType="next"
+                maxLength={10}
+                editable={!isLoading}
               />
-            </TouchableOpacity>
-          </View>
+              {errors.phoneNumber && (
+                <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+              )}
+            </View>
 
-          <PrimaryButton
-            title="Sign In"
-            onPress={SignIn}
-            disabled={isLoading}
-          />
-          <View></View>
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.passwordInput,
+                    password && styles.inputFilled,
+                    errors.password && styles.inputError,
+                  ]}
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                  autoCapitalize="none"
+                  placeholder="Enter password"
+                  placeholderTextColor="rgba(0,0,0,0.5)"
+                  returnKeyType="done"
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                  onSubmitEditing={handleSignIn}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                  disabled={isLoading}
+                >
+                  <Icon
+                    name={showPassword ? "eye-slash" : "eye"}
+                    size={20}
+                    color="rgba(0,0,0,0.5)"
+                  />
+                </TouchableOpacity>
+              </View>
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+            </View>
 
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 8,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                color: "rgba(0,0,0,1)",
-              }}
+            {/* Sign In Button */}
+            <View style={styles.buttonContainer}>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#000" />
+                  <Text style={styles.loadingText}>Signing in...</Text>
+                </View>
+              ) : (
+                <PrimaryButton
+                  title="Sign In"
+                  onPress={handleSignIn}
+                  disabled={isLoading}
+                />
+              )}
+            </View>
+
+            {/* Forgot Password Link (optional) */}
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => navigation.navigate("ForgotPassword")}
+              disabled={isLoading}
             >
-              Are you new here?
-            </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  // color : 'rgba(0,0,0,0.6)',
-                  fontWeight: "700",
-                }}
-              >
-                Sign Up
-              </Text>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
+
+            {/* Sign Up Link */}
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>Are you new here?</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Register")}
+                disabled={isLoading}
+              >
+                <Text style={styles.signUpLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: "white",
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  headerSection: {
+    marginTop: 30,
+    marginBottom: 32,
+    gap: 12,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#000",
+    lineHeight: 32,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "rgba(0,0,0,0.6)",
+    marginTop: 4,
+  },
+  formSection: {
+    gap: 16,
+  },
+  inputContainer: {
+    gap: 8,
   },
   label: {
     fontSize: 16,
-  },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 16,
-    // gap: '110%',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "500",
+    color: "#000",
   },
   input: {
     height: 50,
     borderColor: "rgba(0, 0, 0, 0.20)",
     borderWidth: 1,
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#F4F4F4",
+    fontSize: 16,
   },
-  text: {
-    flexDirection: "row",
+  inputFilled: {
+    borderColor: "#000",
+    backgroundColor: "#fff",
+  },
+  inputError: {
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFF5F5",
+  },
+  passwordContainer: {
+    position: "relative",
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 16,
+    top: 15,
+    padding: 4,
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#FF3B30",
+    marginTop: 4,
+  },
+  buttonContainer: {
+    marginTop: 8,
+  },
+  loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "rgba(0,0,0,0.6)",
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    paddingVertical: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: "rgba(0,0,0,0.7)",
+    fontWeight: "600",
+  },
+  signUpContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 16,
+  },
+  signUpText: {
+    fontSize: 16,
+    color: "rgba(0,0,0,1)",
+  },
+  signUpLink: {
+    fontSize: 16,
+    color: "#000",
+    fontWeight: "700",
   },
 });
 

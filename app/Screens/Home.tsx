@@ -60,8 +60,11 @@ export default function Home({ navigation }: HomeProps) {
   const socketRef = useRef<any>(null);
   const locationSubscriptionRef = useRef<any>(null);
   const locationIntervalRef = useRef<any>(null);
+    const [error, setError] = useState<string | null>(null);
 
-  const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com/api/v1";
+  
+const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com";
+
 
   // Test network connectivity
   const testConnectivity = async () => {
@@ -70,7 +73,7 @@ export default function Home({ navigation }: HomeProps) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const response = await fetch("https://shuttle-backend-0.onrender.com/", {
+      const response = await fetch("https://shuttle-backend-0.onrender.com", {
         method: "HEAD",
         signal: controller.signal,
       });
@@ -89,13 +92,13 @@ export default function Home({ navigation }: HomeProps) {
       try {
         console.log(
           "Attempting to fetch drivers from:",
-          `${BASE_CUSTOMER_URL}/drivers/drivers`
+          `${BASE_CUSTOMER_URL}/api/drivers/drivers`
         );
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const response = await fetch(`${BASE_CUSTOMER_URL}/drivers/drivers`, {
+        const response = await fetch(`${BASE_CUSTOMER_URL}/api/drivers/drivers`, {
           signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
@@ -109,7 +112,7 @@ export default function Home({ navigation }: HomeProps) {
         }
 
         const data = await response.json();
-        console.log("Drivers fetched successfully:", data.drivers[2].busRoute[0].stops);
+        console.log("Drivers fetched successfully:", data);
 
 
         const matchingDriver = data.drivers.find((driver: any) => driver.driverID === busID)
@@ -150,10 +153,19 @@ export default function Home({ navigation }: HomeProps) {
 
 
   const switchStatus = async () => {
+    if (!busID) {
+      setError("Bus ID is required");
+      return;
+    }
+
+    if (isLoading) return; // Prevent multiple simultaneous calls
+
     try {
       setIsLoading(true);
+      setError(null);
+
       const response = await fetch(
-        `${BASE_CUSTOMER_URL}/drivers/drivers/switchStatus`,
+        `${BASE_CUSTOMER_URL}/api/drivers/drivers/switchStatus`,
         {
           method: "POST",
           headers: {
@@ -164,18 +176,25 @@ export default function Home({ navigation }: HomeProps) {
           }),
         }
       );
-      const data = await response.json();
 
-      if (response.ok) {
-        setIsActiveTrip((previousState) => !previousState);
-        console.log(
-          `Driver ${busID} is ${!isActiveTrip ? "active" : "inactive"}`
-        );
-      } else {
-        Alert.alert("Error", data.message || "Failed to toggle bus status.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}`);
       }
+
+      const data = await response.json();
+      
+      // Toggle the local state
+      setIsActiveTrip(prev => !prev);
+      
+      console.log(`Driver ${busID} is now ${!isActiveTrip ? "active" : "inactive"}`);
+      
+      return data;
     } catch (error: any) {
-      Alert.alert("Error", error?.message || "Could not toggle bus status.");
+      const errorMessage = error?.message || "Failed to toggle driver status";
+      setError(errorMessage);
+      console.error("Switch status error:", errorMessage);
+      throw error; // Re-throw for component to handle if needed
     } finally {
       setIsLoading(false);
     }
@@ -184,6 +203,8 @@ export default function Home({ navigation }: HomeProps) {
   const toggleSwitch = () => {
     switchStatus();
   };
+
+  // switchStatus
 
   useEffect(() => {
     console.log("Current busRoute:", busRoute);
@@ -286,7 +307,7 @@ export default function Home({ navigation }: HomeProps) {
 
       console.log("Attempting to connect to socket with busID:", busID);
 
-      const socket = io("https://shuttle-backend-0.onrender.com/", {
+      const socket = io("https://shuttle-backend-0.onrender.com", {
         transports: ["polling", "websocket"], // Try polling first, then websocket
         reconnection: true,
         reconnectionAttempts: 10,
