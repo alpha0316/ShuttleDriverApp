@@ -339,6 +339,7 @@ const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com";
 
         console.log("Emitting driver-connect with data:", driverData);
         socket.emit("driver-connect", driverData);
+        // console.log("driver-connectprinceeeeee");
       });
 
       socket.on("disconnect", (reason: string) => {
@@ -472,7 +473,7 @@ const BASE_CUSTOMER_URL = "https://shuttle-backend-0.onrender.com";
         };
 
         socketRef.current.emit("driver-location-update", locationData);
-        // console.log("Location emitted:", locationData);
+        console.log("Location emitteddddddddddd:", locationData);
       }
     };
 
