@@ -50,13 +50,14 @@ export default function DriverBottomNav() {
           tabBarIcon: ({ focused }) => <HomeIcon focused={focused} />,
         }}
       />
-      <Tab.Screen
+      {/* Comment out the MapScreen tab for now */}
+      {/* <Tab.Screen
         name="MapScreen"
         component={MapScreen}
         options={{
           tabBarIcon: ({ focused }) => <MapIcon focused={focused} />,
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 }

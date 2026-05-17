@@ -8,6 +8,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  startBackgroundLocationUpdates,
+  stopBackgroundLocationUpdates,
+} from "@/services/BackgroundLocationService";
+import {
   Alert,
   ScrollView,
   StyleSheet,
@@ -299,6 +303,19 @@ export default function Home({ navigation }: HomeProps) {
   }, []);
 
   useEffect(() => {
+    if (!isActiveTrip || !driverID) {
+      stopBackgroundLocationUpdates();
+      return;
+    }
+
+    startBackgroundLocationUpdates();
+
+    return () => {
+      stopBackgroundLocationUpdates();
+    };
+  }, [isActiveTrip, driverID]);
+
+  useEffect(() => {
     if (!driverID) return;
 
     const initializeSocket = async () => {
@@ -473,7 +490,7 @@ export default function Home({ navigation }: HomeProps) {
           console.log("No user data found in AsyncStorage.");
         }
       } catch (error) {
-        console.error("Error retrieving user data:", error);
+        // console.error("Error retrieving user data:", error);
       }
     };
 
@@ -482,6 +499,8 @@ export default function Home({ navigation }: HomeProps) {
 
   const handleSignOut = async () => {
     try {
+      await stopBackgroundLocationUpdates();
+
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
