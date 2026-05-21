@@ -150,123 +150,31 @@ const Register = ({ navigation }: RegisterProps) => {
 
   // Handle registration
   const handleRegister = async () => {
-    console.log("🚀 Register button clicked");
+    console.log("🚀 Register button clicked (mock mode)");
 
-    // Validate form
-    if (!validateForm()) {
-      console.log("❌ Validation failed:", errors);
-      Alert.alert("Validation Error", "Please fix the errors before continuing");
-      return;
-    }
+    setIsLoading(true);
 
-    // FIXED: Send firstName and lastName separately (not as fullName)
-    const payload = {
-      username: formData.username.trim().toLowerCase(),
-      firstName: formData.firstName.trim(),
-      lastName: formData.lastName.trim(),
-      phoneNumber: formatPhoneNumber(formData.phoneNumber),
-      location: formData.location.trim(),
-    };
+    // Save mock rider data
+    await AsyncStorage.setItem("riderData", JSON.stringify({
+      userId: "RDR" + Date.now(),
+      username: formData.username.trim().toLowerCase() || "testrider",
+      fullName: `${formData.firstName || "Test"} ${formData.lastName || "Rider"}`,
+      phoneNumber: formData.phoneNumber || "+233541234567",
+      location: formData.location || "Accra",
+    }));
 
-    console.log("📤 Sending registration request:", payload);
+    setFormData({
+      username: "",
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      location: "",
+    });
+    setErrors({});
+    setTouched({});
 
-    try {
-      setIsLoading(true);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
-      const response = await fetch(`${BASE_URL}/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      console.log("📥 Response status:", response.status);
-
-      const data = await response.json();
-      console.log("📥 Response data:", data);
-
-      if (!response.ok) {
-        console.log("❌ Registration failed:", data);
-
-        // Handle specific error cases
-        if (response.status === 409) {
-          throw new Error("Username or phone number already exists");
-        } else if (response.status === 400) {
-          throw new Error(data.message || "Invalid registration data");
-        } else if (response.status === 500) {
-          throw new Error("Server error. Please try again later");
-        } else {
-          throw new Error(data.message || data.error || "Registration failed");
-        }
-      }
-
-      console.log("✅ Registration successful!");
-      
-
-      // Clear form
-      setFormData({
-        username: "",
-        firstName: "",
-        lastName: "",
-        phoneNumber: "",
-        location: "",
-      });
-      setErrors({});
-      setTouched({});
-
-     // ✅ Save Rider Data properly
-      await AsyncStorage.setItem("riderData", JSON.stringify({
-        userId: data?.id || Date.now().toString(), // fallback if no id in response
-        username: payload.username,
-        fullName: `${formData.firstName} ${formData.lastName}`,
-        phoneNumber: payload.phoneNumber,
-        location: payload.location,
-      }));
-      console.log("✅ Rider data saved to AsyncStorage");
-
-
-      Alert.alert(
-        "Success",
-        "Rider account created successfully! Please sign in to continue.",
-        [
-          {
-            text: "Sign In",
-            onPress: () => navigation.navigate("HomeDelivery"),
-          },
-        ]
-      );
-    } catch (error) {
-      console.log("❌ Error during registration:", error);
-
-      let errorMessage = "An unexpected error occurred";
-
-      if (error.name === "AbortError") {
-        errorMessage =
-          "Request timeout. Please check your internet connection and try again.";
-      } else if (
-        error instanceof TypeError &&
-        error.message === "Network request failed"
-      ) {
-        errorMessage = "Network error. Please check your internet connection.";
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      Alert.alert("Registration Failed", errorMessage, [
-        { text: "Try Again", style: "default" },
-      ]);
-    } finally {
-      setIsLoading(false);
-      console.log("🏁 Registration process completed");
-    }
+    setIsLoading(false);
+    navigation.navigate("HomeDelivery");
   };
 
   return (

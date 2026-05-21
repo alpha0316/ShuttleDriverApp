@@ -4,6 +4,15 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const MOCK_DRIVER_DATA = {
+  driver: {
+    id: "DRV001",
+    fullName: "Test Driver",
+    phoneNumber: "0541234567",
+  },
+  token: "mock-token-123",
+};
+
 
 
 type RootStackParamList = {
@@ -23,56 +32,14 @@ export default function SplashScreen() {
   useEffect(() => {
     let isMounted = true;
 
-    const checkUserData = async () => {
-      try {
-        // simulate splash delay
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        if (!isMounted) return;
-
-        // 🔎 Check driver first
-        const driverDataString = await AsyncStorage.getItem("driverData");
-        console.log("📥 DriverData (String):", driverDataString);
-
-        if (driverDataString) {
-          const driverData = JSON.parse(driverDataString);
-          console.log("📥 DriverData (Parsed):", driverData);
-
-          if (driverData?.userId || driverData?.token) {
-            navigation.navigate("Home"); // 🚖 Driver Home
-            return;
-          }
-        }
-
-        // 🔎 If no driver, check rider
-        const riderDataString = await AsyncStorage.getItem("riderData");
-        console.log("📥 RiderData (String):", riderDataString);
-
-        if (riderDataString) {
-          const riderData = JSON.parse(riderDataString);
-          console.log("📥 RiderData (Parsed):", riderData);
-
-          if (riderData?.userId) {
-            navigation.navigate("HomeDelivery"); // 👤 Rider Home
-            return;
-          }
-        }
-
-        // No stored user → signup
-        navigation.navigate("SignUpType");
-      } catch (error) {
-        console.error("❌ Error checking user data:", error);
-        if (isMounted) {
-          navigation.navigate("SignUpType");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+    const skipAuth = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (!isMounted) return;
+      await AsyncStorage.setItem("userData", JSON.stringify(MOCK_DRIVER_DATA));
+      navigation.navigate("Home");
     };
 
-    checkUserData();
+    skipAuth();
 
     return () => {
       isMounted = false;

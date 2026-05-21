@@ -1,16 +1,16 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import SplashScreen from '../screens/SplashScreen';
-import Register from '../screens/Register';
-import Home from '../screens/Home';
-import OTPVerification from '../screens/OTPVerification';
-import SignIn from '../screens/SignIn';
 import SignUpType from '../screens/SignUpType';
-import HomeDelivery from './../screens/deliveryRider/HomeDelivery';
-import PickUps from './../screens/deliveryRider/PickUps';
-import FillingProcess from '../screens/deliveryRider/FillingProcess';
-import RegisterDelivery from '../screens/deliveryRider/RegisterDelivery';
-import SignInDelivery from '../screens/deliveryRider/SignInDelivery';
+import Home from '../screens/shuttle/Home';
+import Register from '../screens/shuttle/Register';
+import SignIn from '../screens/shuttle/SignIn';
+import OTPVerification from '../screens/shuttle/OTPVerification';
+import HomeDelivery from '../screens/rider/HomeDelivery';
+import PickUps from '../screens/rider/PickUps';
+import FillingProcess from '../screens/rider/FillingProcess';
+import RegisterDelivery from '../screens/rider/RegisterDelivery';
+import SignInDelivery from '../screens/rider/SignInDelivery';
 
 // Define the type for your route parameters
 export type RootStackParamList = {

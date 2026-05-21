@@ -18,6 +18,15 @@ import Svg, {
   G, 
   ClipPath
 } from "react-native-svg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const MOCK_RIDER_DATA = {
+  userId: "RDR001",
+  username: "testrider",
+  fullName: "Test Rider",
+  phoneNumber: "+233541234567",
+  location: "Accra",
+};
 
 const Register = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -156,7 +165,10 @@ const Register = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-            onPress={() => navigation.navigate('RegisterDelivery')}
+            onPress={async () => {
+              await AsyncStorage.setItem("riderData", JSON.stringify(MOCK_RIDER_DATA));
+              navigation.navigate('HomeDelivery');
+            }}
             style={{
               display : 'flex',
               gap : 8,
