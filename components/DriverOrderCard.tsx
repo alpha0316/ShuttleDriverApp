@@ -1,13 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
+  LayoutAnimation,
   Linking,
   Platform,
-  LayoutAnimation,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   UIManager,
+  View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
@@ -40,7 +40,10 @@ interface DriverOrderCardProps {
   order: OrderData;
   onCall?: (order: OrderData) => void;
   onViewMap?: (order: OrderData) => void;
+  onComplete?: (order: OrderData) => void;
   defaultOpen?: boolean;
+  hideCallName?: boolean;
+  actionButtonFlex?: [complete?: number, call?: number, map?: number];
 }
 
 const cedis = (amount: number) =>
@@ -82,7 +85,10 @@ const DriverOrderCard: React.FC<DriverOrderCardProps> = ({
   order,
   onCall,
   onViewMap,
+  onComplete,
   defaultOpen = false,
+  hideCallName = false,
+  actionButtonFlex,
 }) => {
   const [expanded, setExpanded] = useState(defaultOpen);
 
@@ -115,6 +121,10 @@ const DriverOrderCard: React.FC<DriverOrderCardProps> = ({
       Linking.openURL(url).catch(() => { });
     }
   }, [order, onViewMap]);
+
+  const handleComplete = useCallback(() => {
+    onComplete?.(order);
+  }, [order, onComplete]);
 
   const itemCount = totalItems(order.items);
   const orderCount = order.items.length;
@@ -185,32 +195,40 @@ const DriverOrderCard: React.FC<DriverOrderCardProps> = ({
           </View>
 
           <View style={styles.actionsRow}>
+            {onComplete && (
+              <>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.completeBtn, actionButtonFlex?.[0] != null && { flex: actionButtonFlex[0] }]}
+                  onPress={handleComplete}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.actionBtnText, styles.completeBtnText]}>
+                    Complete
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.actionBtnGap} />
+              </>
+            )}
+
             <TouchableOpacity
-              style={[styles.actionBtn, styles.callBtn]}
+              style={[styles.actionBtn, styles.callBtn, actionButtonFlex?.[1] != null && { flex: actionButtonFlex[1] }]}
               onPress={handleCall}
               activeOpacity={0.75}
             >
-              <Svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <Path d="M7.36634 9.96667L6.13301 11.2C5.87301 11.46 5.45967 11.46 5.19301 11.2067C5.11967 11.1333 5.04634 11.0667 4.97301 10.9933C4.28634 10.3 3.66634 9.57333 3.11301 8.81333C2.56634 8.05333 2.12634 7.29333 1.80634 6.54C1.49301 5.78 1.33301 5.05333 1.33301 4.36C1.33301 3.90667 1.41301 3.47333 1.57301 3.07333C1.73301 2.66667 1.98634 2.29333 2.33967 1.96C2.76634 1.54 3.23301 1.33333 3.72634 1.33333C3.91301 1.33333 4.09967 1.37333 4.26634 1.45333C4.43967 1.53333 4.59301 1.65333 4.71301 1.82667L6.25967 4.00667C6.37967 4.17333 6.46634 4.32667 6.52634 4.47333C6.58634 4.61333 6.61967 4.75333 6.61967 4.88C6.61967 5.04 6.57301 5.2 6.47967 5.35333C6.39301 5.50667 6.26634 5.66667 6.10634 5.82667L5.59967 6.35333C5.52634 6.42667 5.49301 6.51333 5.49301 6.62C5.49301 6.67333 5.49967 6.72 5.51301 6.77333C5.53301 6.82667 5.55301 6.86667 5.56634 6.90667C5.68634 7.12667 5.89301 7.41333 6.18634 7.76C6.48634 8.10667 6.80634 8.46 7.15301 8.81333C7.21967 8.88 7.29301 8.94667 7.35967 9.01333C7.62634 9.27333 7.63301 9.7 7.36634 9.96667Z" fill="#FF8D28" />
-                <Path d="M14.6471 12.22C14.6471 12.4067 14.6137 12.6 14.5471 12.7867C14.5271 12.84 14.5071 12.8933 14.4804 12.9467C14.3671 13.1867 14.2204 13.4133 14.0271 13.6267C13.7004 13.9867 13.3404 14.2467 12.9337 14.4133C12.9271 14.4133 12.9204 14.42 12.9137 14.42C12.5204 14.58 12.0937 14.6667 11.6337 14.6667C10.9537 14.6667 10.2271 14.5067 9.46039 14.18C8.69372 13.8533 7.92706 13.4133 7.16706 12.86C6.90706 12.6667 6.64706 12.4733 6.40039 12.2667L8.58039 10.0867C8.76706 10.2267 8.93372 10.3333 9.07372 10.4067C9.10706 10.42 9.14706 10.44 9.19372 10.46C9.24706 10.48 9.30039 10.4867 9.36039 10.4867C9.47372 10.4867 9.56039 10.4467 9.63372 10.3733L10.1404 9.87333C10.3071 9.70667 10.4671 9.58 10.6204 9.5C10.7737 9.40667 10.9271 9.36 11.0937 9.36C11.2204 9.36 11.3537 9.38667 11.5004 9.44667C11.6471 9.50667 11.8004 9.59333 11.9671 9.70667L14.1737 11.2733C14.3471 11.3933 14.4671 11.5333 14.5404 11.7C14.6071 11.8667 14.6471 12.0333 14.6471 12.22Z" fill="#FF8D28" />
-              </Svg>
               <Text style={[styles.actionBtnText, styles.callBtnText]}>
-                Call {firstName(order.customerName)}
+                {hideCallName ? 'Call' : `Call ${firstName(order.customerName)}`}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.actionBtnGap} />
 
             <TouchableOpacity
-              style={[styles.actionBtn, styles.mapBtn]}
+              style={[styles.actionBtn, styles.mapBtn, actionButtonFlex?.[2] != null && { flex: actionButtonFlex[2] }]}
               onPress={handleViewMap}
               activeOpacity={0.75}
             >
-              <Svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <Path d="M13.7467 5.63333C13.0467 2.55333 10.3601 1.16667 8.00006 1.16667C8.00006 1.16667 8.00006 1.16667 7.9934 1.16667C5.64006 1.16667 2.94673 2.54667 2.24673 5.62667C1.46673 9.06667 3.5734 11.98 5.48006 13.8133C6.18673 14.4933 7.0934 14.8333 8.00006 14.8333C8.90673 14.8333 9.8134 14.4933 10.5134 13.8133C12.4201 11.98 14.5267 9.07333 13.7467 5.63333ZM8.00006 8.97333C6.84006 8.97333 5.90006 8.03333 5.90006 6.87333C5.90006 5.71333 6.84006 4.77333 8.00006 4.77333C9.16006 4.77333 10.1001 5.71333 10.1001 6.87333C10.1001 8.03333 9.16006 8.97333 8.00006 8.97333Z" fill="#34C759" />
-              </Svg>
               <Text style={[styles.actionBtnText, styles.mapBtnText]}>
-                View Location
+                View Direction
               </Text>
             </TouchableOpacity>
           </View>
@@ -409,6 +427,13 @@ const styles = StyleSheet.create({
   },
   mapBtnText: {
     color: GREEN,
+  },
+  completeBtn: {
+    borderColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: '#fafafa',
+  },
+  completeBtnText: {
+    color: '#007AFF',
   },
 });
 

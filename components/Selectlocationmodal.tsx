@@ -166,8 +166,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderRadius: 32,
     paddingTop: 12,
     paddingHorizontal: 20,
     maxHeight: '72%',
@@ -177,6 +176,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 16,
+    marginHorizontal: 12,
+    marginBottom: 16,
   },
   handle: {
     alignSelf: 'center',
@@ -225,6 +226,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   locationRowText: {
     flex: 1,

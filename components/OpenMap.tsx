@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Region, Callout } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { batchGeocodeHostels, geocodeHostelName, getCachedHostelLocations } from '../app/data/geocodingService';
@@ -36,12 +36,21 @@ interface HostelLocation {
   orders: Order[];
 }
 
+interface DeliveryPoint {
+  latitude: number;
+  longitude: number;
+  label: string;
+  customerName: string;
+}
+
 interface MapScreenProps {
   orders?: Order[];
   selectedHostel?: string | null;
   campusName?: string;
   city?: string;
   onHostelPress?: (hostel: HostelLocation) => void;
+  deliveryPoints?: DeliveryPoint[];
+  routeTarget?: { latitude: number; longitude: number } | null;
 }
 
 const MapScreen: React.FC<MapScreenProps> = ({ 
@@ -49,7 +58,9 @@ const MapScreen: React.FC<MapScreenProps> = ({
   selectedHostel = null,
   campusName = "KNUST",
   city = "Kumasi",
-  onHostelPress
+  onHostelPress,
+  deliveryPoints = [],
+  routeTarget,
 }) => {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -64,6 +75,8 @@ const MapScreen: React.FC<MapScreenProps> = ({
   const [hostelLocations, setHostelLocations] = useState<HostelLocation[]>([]);
   const [geocodingProgress, setGeocodingProgress] = useState(0);
   const [geocodingStatus, setGeocodingStatus] = useState('Preparing...');
+  const [routeCoords, setRouteCoords] = useState<{latitude: number; longitude: number}[]>([]);
+  const [routeLoading, setRouteLoading] = useState(false);
   
   const mapRef = useRef<MapView>(null);
 
@@ -192,6 +205,47 @@ const MapScreen: React.FC<MapScreenProps> = ({
     }
   }, [selectedHostel, hostelLocations]);
 
+  /* Fetch driving route when routeTarget changes */
+  useEffect(() => {
+    if (!location || !routeTarget) {
+      setRouteCoords([]);
+      return;
+    }
+
+    const fetchRoute = async () => {
+      setRouteLoading(true);
+      try {
+        const { latitude: lat1, longitude: lng1 } = location.coords;
+        const { latitude: lat2, longitude: lng2 } = routeTarget;
+        const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?geometries=geojson&overview=full`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.code === 'Ok' && data.routes?.length > 0) {
+          const coords = data.routes[0].geometry.coordinates.map(
+            ([lng, lat]: [number, number]) => ({ latitude: lat, longitude: lng })
+          );
+          setRouteCoords(coords);
+
+          // Fit map to show entire route
+          if (mapRef.current && coords.length > 0) {
+            setTimeout(() => {
+              mapRef.current?.fitToCoordinates(coords, {
+                edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
+                animated: true,
+              });
+            }, 300);
+          }
+        }
+      } catch {
+        setRouteCoords([]);
+      } finally {
+        setRouteLoading(false);
+      }
+    };
+
+    fetchRoute();
+  }, [location, routeTarget]);
+
   const goToMyLocation = useCallback(async () => {
     if (location) {
       mapRef.current?.animateToRegion({
@@ -306,13 +360,58 @@ const MapScreen: React.FC<MapScreenProps> = ({
         mapType={mapType}
         region={region}
         onRegionChangeComplete={setRegion}
-        showsUserLocation={true}
+        showsUserLocation={false}
         showsCompass={true}
         zoomEnabled={true}
         scrollEnabled={true}
         showsMyLocationButton={false}
       >
         {renderHostelMarkers()}
+
+        {/* Individual delivery point markers */}
+        {deliveryPoints.map((point, index) => (
+          <Marker
+            key={`delivery-${index}`}
+            coordinate={{ latitude: point.latitude, longitude: point.longitude }}
+            title={point.customerName}
+            description={point.label}
+          >
+            <View style={[deliveryMarker, { backgroundColor: '#FFCE31' }]} />
+            <Callout tooltip>
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutTitle}>📍 {point.customerName}</Text>
+                <Text style={styles.calloutSubtitle}>{point.label}</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+
+        {/* Custom user location marker */}
+        {location && (
+          <Marker
+            coordinate={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            flat
+          >
+            <View style={styles.userMarkerOuter}>
+              <View style={styles.userMarkerInner} />
+            </View>
+          </Marker>
+        )}
+
+        {/* Route polyline */}
+        {routeCoords.length > 0 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeColor="#007AFF"
+            strokeWidth={4}
+            lineCap="round"
+            lineJoin="round"
+          />
+        )}
       </MapView>
 
       {/* Custom Location Button */}
@@ -332,16 +431,30 @@ const MapScreen: React.FC<MapScreenProps> = ({
       </TouchableOpacity>
 
       {/* Status Info */}
-      <View style={styles.statusContainer}>
+      {/* <View style={styles.statusContainer}>
         <Text style={styles.statusText}>
           📍 {hostelLocations.length} hostels mapped
         </Text>
         {errorMsg && (
           <Text style={styles.errorText}>{errorMsg}</Text>
         )}
-      </View>
+      </View> */}
     </View>
   );
+};
+
+/* ─── Marker style constants ─────────────────────────────── */
+const deliveryMarker = {
+  width: 20,
+  height: 20,
+  borderRadius: 10,
+  borderWidth: 2,
+  borderColor: '#FFFFFF',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.3,
+  shadowRadius: 2,
+  elevation: 3,
 };
 
 const styles = StyleSheet.create({
@@ -471,6 +584,24 @@ const styles = StyleSheet.create({
     color: '#888',
     fontStyle: 'italic',
     marginTop: 2,
+  },
+  userMarkerOuter: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(30,136,229,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(30,136,229,0.4)',
+  },
+  userMarkerInner: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#1E88E5',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
 

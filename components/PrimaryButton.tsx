@@ -38,12 +38,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     borderRadius: 20,
     alignItems: "center",
-    height: 55,
+    height: 48,
     justifyContent: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
   },
   disabled: {

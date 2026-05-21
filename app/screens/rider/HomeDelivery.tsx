@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -175,7 +176,7 @@ export default function HomeDelivery({ navigation }: HomeDeliveryProps) {
           <ScrollView
             style={styles.cardList}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ gap: 12, paddingBottom: 12 }}
+            contentContainerStyle={{ gap: 12, paddingBottom: Dimensions.get('window').height * 0.18 + 100 }}
           >
             {visibleCards.map(order => (
               <DriverOrderCard
@@ -244,8 +245,8 @@ const styles = StyleSheet.create({
   main: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 8,
-    paddingTop: Platform.OS === 'ios' ? 56 : 30,
+    paddingHorizontal: 2,
+    paddingTop: Platform.OS === 'ios' ? 12 : 30,
   },
   contentWrapper: {
     flex: 1,
@@ -320,8 +321,9 @@ const styles = StyleSheet.create({
 
   /* Card list */
   cardList: {
-    maxHeight: '66%',
+    maxHeight: '100%',
     paddingHorizontal: 4,
+    zIndex: 2
   },
 
   /* Empty state */
@@ -346,10 +348,13 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.10)',
-    backgroundColor: '#F5F5F5',
-    alignSelf: 'stretch',
+    backgroundColor: '#FdFdFd',
     gap: 16,
-    marginBottom: Platform.OS === 'ios' ? 24 : 12,
+    bottom: Dimensions.get('window').height * 0.01,
+    left: 8,
+    right: 8,
+    zIndex: 222,
+    position: 'absolute',
   },
   summaryRow: {
     flexDirection: 'row',
